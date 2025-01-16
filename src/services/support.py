@@ -156,7 +156,7 @@ DEBES RESPONDER CON ESTE FORMATO JSON EXACTO:
             # Get GPT's analysis and response
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system", 
