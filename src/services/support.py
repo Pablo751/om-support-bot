@@ -3,11 +3,12 @@ import re
 import json
 import logging
 import random
+import certifi
 from typing import Dict, Optional, List, Tuple
 from datetime import datetime
 import pandas as pd
 import openai
-from src.services.mongodb import MongoDBService
+from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +16,18 @@ class SupportSystem:
     def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
         """Initialize the support system with knowledge bases"""
         self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
+        self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
         self.openai_client = openai
         self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
-        self.mongo_service = MongoDBService()
+        self.mongo_username = "juanpablo_casado"
+        self.mongo_password = self._get_env_variable('MONGO_PASSWORD')
+        self.mongo_client = None
 
     def _get_env_variable(self, var_name: str) -> str:
         """Safely get environment variable"""
         value = os.getenv(var_name)
         if not value:
-            logger.error(f"Environment variable '{var_name}' not defined")
-            return "dummy_value_for_testing"
+            raise EnvironmentError(f"Environment variable '{var_name}' not defined.")
         return value
 
     def _load_knowledge_base(self, csv_path: str) -> pd.DataFrame:
@@ -46,6 +49,60 @@ class SupportSystem:
         except Exception as e:
             logger.error(f"Error loading knowledge base: {e}")
             return pd.DataFrame(columns=['Heading', 'Content'])
+
+    def _load_json_knowledge_base(self, json_path: str) -> Dict:
+        """Load JSON knowledge base"""
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading JSON knowledge base: {e}")
+            return None
+
+    def _get_mongo_client(self):
+        """Get MongoDB client with connection pooling"""
+        if self.mongo_client is None:
+            try:
+                url = f"mongodb+srv://{self.mongo_username}:{self.mongo_password}@legacy-production-v6.dmjt9.mongodb.net/yom-production?retryWrites=true&w=majority"
+                self.mongo_client = MongoClient(
+                    url, 
+                    tlsCAFile=certifi.where(),
+                    serverSelectionTimeoutMS=5000
+                )
+                # Test connection
+                self.mongo_client.admin.command('ping')
+                logger.info("MongoDB connection successful")
+            except Exception as e:
+                logger.error(f"Error connecting to MongoDB: {e}")
+                self.mongo_client = None
+                raise
+        return self.mongo_client
+
+    def _check_store_status(self, company_name: str, store_id: str) -> Optional[bool]:
+        """Check store status in MongoDB"""
+        filter_json = {
+            "domain": f"{company_name}.youorder.me",
+            "contact.externalId": store_id
+        }
+        
+        try:
+            client = self._get_mongo_client()
+            if not client:
+                return None
+                
+            db = client['yom-production']
+            collection = db['commerces']
+            
+            store = collection.find_one(filter_json)
+            logger.info(f"MongoDB search result for {filter_json}: {store}")
+            
+            if store:
+                return store.get('active', False)
+            return None
+            
+        except Exception as e:
+            logger.error(f"MongoDB error: {str(e)}")
+            return None
 
     async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
         """Process incoming queries using GPT for the entire flow"""
@@ -71,7 +128,9 @@ class SupportSystem:
                 knowledge_base_context = "\n\n".join(knowledge_entries)
 
             # Single GPT call to analyze the query and generate response
-            prompt = f"""Analiza esta consulta de soporte y proporciona la respuesta adecuada.
+            prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
+
+Analiza esta consulta de soporte y proporciona la respuesta adecuada.
 
 CONSULTA: {query}
 
@@ -79,98 +138,95 @@ BASE DE CONOCIMIENTOS:
 {knowledge_base_context}
 
 INSTRUCCIONES:
+1. Determina si es una consulta sobre el estado de un comercio o una consulta general
+2. Extrae la información relevante
+3. Genera una respuesta apropiada
 
-1. PRIMERO: Clasifica el tipo de consulta:
-   A. CONSULTA DE ESTADO DE COMERCIO: Si preguntan sobre el estado/activación de un comercio específico.
-   B. CONSULTA GENERAL: Cualquier otra pregunta o problema.
-
-2. SEGUNDO: Según el tipo de consulta:
-
-   Si es CONSULTA DE ESTADO DE COMERCIO:
-   - Extrae el ID del comercio y nombre de empresa si están presentes
-   - Si falta información, pide los datos necesarios
-   - Si tienes toda la información, indica que verificarás el estado
-
-   Si es CONSULTA GENERAL:
-   - Busca información relevante en la base de conocimientos
-   - Proporciona una respuesta detallada usando esa información
-   - Si no hay información relevante, da una respuesta general útil
-
-3. IMPORTANTE: SIEMPRE responde con un JSON válido usando este formato exacto:
+DEBES RESPONDER CON ESTE FORMATO JSON EXACTO:
 {{
     "query_type": "STORE_STATUS",
-    "response_type": "STORE_CHECK",
     "store_info": {{
-        "company_name": "nombre_empresa",
-        "store_id": "id_comercio"
+        "company_name": "nombre_empresa o null",
+        "store_id": "id_comercio o null"
     }},
-    "knowledge_base_refs": [],
-    "response_text": "texto de respuesta",
-    "confidence": 0.95
+    "response_text": "texto de respuesta al usuario",
+    "use_knowledge_base": false
 }}"""
 
             # Get GPT's analysis and response
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "Eres un asistente de soporte preciso para YOM. SIEMPRE respondes con JSON válido."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system", 
+                        "content": "Eres un asistente que SOLO responde con JSON válido. NO uses markdown, NO uses comillas triples, NO añadas explicaciones. SOLO JSON."
+                    },
+                    {
+                        "role": "user", 
+                        "content": prompt
+                    }
                 ],
                 temperature=0.1
             )
 
-            # Log the raw response for debugging
-            logger.debug(f"Raw OpenAI response: {response}")
-            
-            # Extract the content from the response
+            # Extract and clean the content
             content = response.choices[0].message.content.strip()
+            content = content.replace('```json', '').replace('```', '').strip()
             logger.info(f"OpenAI response content: {content}")
 
-            # Parse the JSON response
-            analysis = json.loads(content)
-            logger.info(f"Parsed GPT Analysis: {analysis}")
+            try:
+                # Parse the JSON response
+                analysis = json.loads(content)
+                logger.info(f"Parsed GPT Analysis: {analysis}")
 
-            # Handle response based on analysis
-            if analysis["query_type"] == "STORE_STATUS":
-                if analysis.get("response_type") == "STORE_CHECK" and analysis.get("store_info", {}).get("company_name") and analysis.get("store_info", {}).get("store_id"):
-                    # Check store status in MongoDB
-                    store_status = self.mongo_service.check_store_status(
-                        analysis["store_info"]["company_name"],
-                        analysis["store_info"]["store_id"]
-                    )
-                    
-                    if store_status is None:
-                        return (
-                            "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
-                            None
+                # Handle store status queries
+                if analysis["query_type"] == "STORE_STATUS":
+                    if analysis["store_info"]["company_name"] and analysis["store_info"]["store_id"]:
+                        # Check store status in MongoDB
+                        store_status = self._check_store_status(
+                            analysis["store_info"]["company_name"],
+                            analysis["store_info"]["store_id"]
                         )
-                    elif store_status:
-                        return (
-                            f"✅ ¡Buenas noticias! El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está activo y funcionando correctamente.",
-                            None
-                        )
+                        
+                        if store_status is None:
+                            return (
+                                "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
+                                None
+                            )
+                        elif store_status:
+                            return (
+                                f"✅ ¡Buenas noticias! El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está activo y funcionando correctamente.",
+                                None
+                            )
+                        else:
+                            return (
+                                f"❌ El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está desactivado actualmente.",
+                                None
+                            )
                     else:
                         return (
-                            f"❌ El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está desactivado actualmente.",
-                            None
+                            "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
+                            "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
+                            "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
+                            "¿Podrías proporcionarme esta información? 🤔",
+                            ["company_name", "store_id"]
                         )
-                else:  # MISSING_INFO
-                    return (
-                        "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
-                        "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
-                        "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
-                        "¿Podrías proporcionarme esta información? 🤔",
-                        ["company_name", "store_id"]
-                    )
 
-            # For general queries, return GPT's response
-            return (analysis.get("response_text", "Lo siento, no pude procesar tu consulta correctamente. ¿Podrías reformularla?"), None)
+                # For general queries, return GPT's response
+                return (analysis["response_text"], None)
 
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {e}")
-            logger.error(f"Failed to parse content: {response.choices[0].message.content if 'response' in locals() else 'No response'}")
-            return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error with content: {content}")
+                logger.error(f"Error details: {str(e)}")
+                return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
+
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
             return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
+
+    def __del__(self):
+        """Cleanup MongoDB connection"""
+        if self.mongo_client:
+            self.mongo_client.close()
+            logger.info("MongoDB connection closed.")
