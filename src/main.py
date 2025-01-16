@@ -52,14 +52,24 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def webhook(webhook_request: WebhookRequest):
     """Handle incoming WhatsApp messages"""
     try:
+        # Add detailed logging
+        logger.info("Received webhook request:")
+        logger.info(f"Message: {webhook_request.message}")
+        logger.info(f"WhatsApp ID: {webhook_request.wa_id}")
+
         # Process query and send response
         response_text, _ = await support_system.process_query(
             webhook_request.message,
             user_name=None
         )
 
+        logger.info(f"Generated response: {response_text}")
+        logger.info(f"Sending response to WhatsApp ID: {webhook_request.wa_id}")
+
+        # Send the response
         await whatsapp_api.send_message(webhook_request.wa_id, response_text)
-        
+        logger.info("Response sent successfully")
+
         return {
             "success": True, 
             "info": "Message processed successfully",
@@ -68,11 +78,7 @@ async def webhook(webhook_request: WebhookRequest):
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
-        return {
-            "success": False, 
-            "error": f"Internal server error: {str(e)}",
-            "response_text": None
-        }
+        return {"success": False, "error": f"Internal server error: {str(e)}"}
 
 @app.get("/health")
 async def health_check():
