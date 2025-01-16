@@ -45,34 +45,44 @@ async def startup_event():
 async def webhook(request: Request):
     """Handle incoming WhatsApp messages"""
     try:
-        # Get the raw request body
+        # Get the raw request body and headers
         body = await request.json()
-        logger.info(f"Received raw webhook data: {body}")
+        headers = dict(request.headers)
+        logger.info("=============== NEW WEBHOOK REQUEST ===============")
+        logger.info(f"Headers: {headers}")
+        logger.info(f"Raw body: {body}")
 
-        # If it's coming from Wasapi, it will have a 'data' field
+        # Log everything that comes in
         if 'data' in body:
+            logger.info("Wasapi format detected")
+            logger.info(f"Data content: {body['data']}")
             message = body['data'].get('message', '')
             wa_id = body['data'].get('wa_id', '')
+            logger.info(f"Extracted from Wasapi - message: {message}, wa_id: {wa_id}")
         else:
-            # Our test format
+            logger.info("Test format detected")
             message = body.get('message', '')
             wa_id = body.get('wa_id', '')
-
-        logger.info(f"Processing message: {message} for wa_id: {wa_id}")
+            logger.info(f"Extracted from test format - message: {message}, wa_id: {wa_id}")
 
         if not message or not wa_id:
-            raise HTTPException(status_code=400, detail="Missing message or wa_id")
+            error_msg = "Missing message or wa_id"
+            logger.error(error_msg)
+            raise HTTPException(status_code=400, detail=error_msg)
 
         # Process query and send response
+        logger.info(f"About to process query: {message} for wa_id: {wa_id}")
         response_text, _ = await support_system.process_query(
             message,
             user_name=None
         )
 
-        logger.info(f"Sending response to WhatsApp ID: {wa_id}")
+        logger.info(f"Generated response: {response_text}")
+        logger.info(f"Attempting to send to wa_id: {wa_id}")
         
         # Send the response
-        await whatsapp_api.send_message(wa_id, response_text)
+        response = await whatsapp_api.send_message(wa_id, response_text)
+        logger.info(f"Wasapi send response: {response}")
         
         return {
             "success": True,
@@ -82,6 +92,8 @@ async def webhook(request: Request):
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
 
 @app.get("/health")
