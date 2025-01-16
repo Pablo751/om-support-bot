@@ -1,23 +1,21 @@
 # src/main.py
 import os
+import logging
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-from src.models.schemas import WebhookRequest, MessageResponse
+from src.models.schemas import MessageResponse
 from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
-import logging
-
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
 
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
@@ -43,45 +41,41 @@ async def startup_event():
     whatsapp_api = WhatsAppAPI(api_key)
     mongodb_service = MongoDBService()
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    if whatsapp_api:
-        await whatsapp_api.close()
-    if mongodb_service:
-        mongodb_service.close()
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"success": False, "error": str(exc.detail)}
-    )
-
 @app.post("/webhook", response_model=MessageResponse)
-async def webhook(webhook_request: WebhookRequest):
+async def webhook(request: Request):
     """Handle incoming WhatsApp messages"""
     try:
-        # Add detailed logging
-        logger.info("Received webhook request:")
-        logger.info(f"Message: {webhook_request.message}")
-        logger.info(f"WhatsApp ID: {webhook_request.wa_id}")
+        # Get the raw request body
+        body = await request.json()
+        logger.info(f"Received raw webhook data: {body}")
+
+        # If it's coming from Wasapi, it will have a 'data' field
+        if 'data' in body:
+            message = body['data'].get('message', '')
+            wa_id = body['data'].get('wa_id', '')
+        else:
+            # Our test format
+            message = body.get('message', '')
+            wa_id = body.get('wa_id', '')
+
+        logger.info(f"Processing message: {message} for wa_id: {wa_id}")
+
+        if not message or not wa_id:
+            raise HTTPException(status_code=400, detail="Missing message or wa_id")
 
         # Process query and send response
         response_text, _ = await support_system.process_query(
-            webhook_request.message,
+            message,
             user_name=None
         )
 
-        logger.info(f"Generated response: {response_text}")
-        logger.info(f"Sending response to WhatsApp ID: {webhook_request.wa_id}")
-
+        logger.info(f"Sending response to WhatsApp ID: {wa_id}")
+        
         # Send the response
-        await whatsapp_api.send_message(webhook_request.wa_id, response_text)
-        logger.info("Response sent successfully")
-
+        await whatsapp_api.send_message(wa_id, response_text)
+        
         return {
-            "success": True, 
+            "success": True,
             "info": "Message processed successfully",
             "response_text": response_text
         }
