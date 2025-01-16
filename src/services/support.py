@@ -4,6 +4,7 @@ import json
 import logging
 import random
 from typing import Dict, Optional, List, Tuple
+from datetime import datetime
 import pandas as pd
 import openai
 from src.services.mongodb import MongoDBService
@@ -33,11 +34,6 @@ class SupportSystem:
             if csv_path and os.path.exists(csv_path):
                 df = pd.read_csv(csv_path, encoding='utf-8')
                 logger.info(f"Successfully loaded knowledge base with {len(df)} entries")
-                # Log first few entries for debugging
-                logger.debug("First few knowledge base entries:")
-                for _, row in df.head().iterrows():
-                    logger.debug(f"Heading: {row['Heading']}")
-                    logger.debug(f"Content: {row['Content']}\n")
                 return df
             else:
                 # For testing/development, create a minimal knowledge base
@@ -51,31 +47,31 @@ class SupportSystem:
             logger.error(f"Error loading knowledge base: {e}")
             return pd.DataFrame(columns=['Heading', 'Content'])
 
-async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-    """Process incoming queries using GPT for the entire flow"""
-    logger.info(f"Processing query: {query}")
+    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
+        """Process incoming queries using GPT for the entire flow"""
+        logger.info(f"Processing query: {query}")
 
-    # Handle basic greetings
-    query_lower = query.lower().strip()
-    if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
-        greetings = [
-            f"¡Hola{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo ayudarte hoy?",
-            f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
-            f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
-        ]
-        return (random.choice(greetings), None)
+        # Handle basic greetings
+        query_lower = query.lower().strip()
+        if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
+            greetings = [
+                f"¡Hola{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo ayudarte hoy?",
+                f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
+                f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
+            ]
+            return (random.choice(greetings), None)
 
-    try:
-        # Prepare knowledge base context
-        knowledge_base_context = ""
-        if not self.primary_knowledge_base.empty:
-            knowledge_entries = []
-            for _, row in self.primary_knowledge_base.iterrows():
-                knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
-            knowledge_base_context = "\n\n".join(knowledge_entries)
+        try:
+            # Prepare knowledge base context
+            knowledge_base_context = ""
+            if not self.primary_knowledge_base.empty:
+                knowledge_entries = []
+                for _, row in self.primary_knowledge_base.iterrows():
+                    knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
+                knowledge_base_context = "\n\n".join(knowledge_entries)
 
-        # Single GPT call to analyze the query and generate response
-        prompt = f"""Analiza esta consulta de soporte y proporciona la respuesta adecuada.
+            # Single GPT call to analyze the query and generate response
+            prompt = f"""Analiza esta consulta de soporte y proporciona la respuesta adecuada.
 
 CONSULTA: {query}
 
@@ -113,68 +109,68 @@ INSTRUCCIONES:
     "confidence": 0.95
 }}"""
 
-        # Get GPT's analysis and response
-        logger.info("Sending request to OpenAI")
-        response = self.openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un asistente de soporte preciso para YOM. SIEMPRE respondes con JSON válido."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.1
-        )
+            # Get GPT's analysis and response
+            logger.info("Sending request to OpenAI")
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Eres un asistente de soporte preciso para YOM. SIEMPRE respondes con JSON válido."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1
+            )
 
-        # Log the raw response for debugging
-        logger.debug(f"Raw OpenAI response: {response}")
-        
-        # Extract the content from the response
-        content = response.choices[0].message.content.strip()
-        logger.info(f"OpenAI response content: {content}")
+            # Log the raw response for debugging
+            logger.debug(f"Raw OpenAI response: {response}")
+            
+            # Extract the content from the response
+            content = response.choices[0].message.content.strip()
+            logger.info(f"OpenAI response content: {content}")
 
-        # Parse the JSON response
-        analysis = json.loads(content)
-        logger.info(f"Parsed GPT Analysis: {analysis}")
+            # Parse the JSON response
+            analysis = json.loads(content)
+            logger.info(f"Parsed GPT Analysis: {analysis}")
 
-        # Handle response based on analysis
-        if analysis["query_type"] == "STORE_STATUS":
-            if analysis.get("response_type") == "STORE_CHECK" and analysis.get("store_info", {}).get("company_name") and analysis.get("store_info", {}).get("store_id"):
-                # Check store status in MongoDB
-                store_status = self.mongo_service.check_store_status(
-                    analysis["store_info"]["company_name"],
-                    analysis["store_info"]["store_id"]
-                )
-                
-                if store_status is None:
-                    return (
-                        "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
-                        None
+            # Handle response based on analysis
+            if analysis["query_type"] == "STORE_STATUS":
+                if analysis.get("response_type") == "STORE_CHECK" and analysis.get("store_info", {}).get("company_name") and analysis.get("store_info", {}).get("store_id"):
+                    # Check store status in MongoDB
+                    store_status = self.mongo_service.check_store_status(
+                        analysis["store_info"]["company_name"],
+                        analysis["store_info"]["store_id"]
                     )
-                elif store_status:
+                    
+                    if store_status is None:
+                        return (
+                            "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
+                            None
+                        )
+                    elif store_status:
+                        return (
+                            f"✅ ¡Buenas noticias! El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está activo y funcionando correctamente.",
+                            None
+                        )
+                    else:
+                        return (
+                            f"❌ El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está desactivado actualmente.",
+                            None
+                        )
+                else:  # MISSING_INFO
                     return (
-                        f"✅ ¡Buenas noticias! El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está activo y funcionando correctamente.",
-                        None
+                        "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
+                        "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
+                        "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
+                        "¿Podrías proporcionarme esta información? 🤔",
+                        ["company_name", "store_id"]
                     )
-                else:
-                    return (
-                        f"❌ El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está desactivado actualmente.",
-                        None
-                    )
-            else:  # MISSING_INFO
-                return (
-                    "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
-                    "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
-                    "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
-                    "¿Podrías proporcionarme esta información? 🤔",
-                    ["company_name", "store_id"]
-                )
 
-        # For general queries, return GPT's response
-        return (analysis.get("response_text", "Lo siento, no pude procesar tu consulta correctamente. ¿Podrías reformularla?"), None)
+            # For general queries, return GPT's response
+            return (analysis.get("response_text", "Lo siento, no pude procesar tu consulta correctamente. ¿Podrías reformularla?"), None)
 
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON parsing error: {e}")
-        logger.error(f"Failed to parse content: {response.choices[0].message.content if 'response' in locals() else 'No response'}")
-        return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
-    except Exception as e:
-        logger.error(f"Error processing query: {e}", exc_info=True)
-        return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {e}")
+            logger.error(f"Failed to parse content: {response.choices[0].message.content if 'response' in locals() else 'No response'}")
+            return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
+        except Exception as e:
+            logger.error(f"Error processing query: {e}", exc_info=True)
+            return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
