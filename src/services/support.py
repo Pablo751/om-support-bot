@@ -18,6 +18,39 @@ class SupportSystem:
         self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
         self.mongo_service = MongoDBService()
 
+    def _get_env_variable(self, var_name: str) -> str:
+        """Safely get environment variable"""
+        value = os.getenv(var_name)
+        if not value:
+            logger.error(f"Environment variable '{var_name}' not defined")
+            return "dummy_value_for_testing"
+        return value
+
+    def _load_knowledge_base(self, csv_path: str) -> pd.DataFrame:
+        """Load knowledge base from CSV"""
+        try:
+            # Attempt to load the CSV
+            if csv_path and os.path.exists(csv_path):
+                df = pd.read_csv(csv_path, encoding='utf-8')
+                logger.info(f"Successfully loaded knowledge base with {len(df)} entries")
+                # Log first few entries for debugging
+                logger.debug("First few knowledge base entries:")
+                for _, row in df.head().iterrows():
+                    logger.debug(f"Heading: {row['Heading']}")
+                    logger.debug(f"Content: {row['Content']}\n")
+                return df
+            else:
+                # For testing/development, create a minimal knowledge base
+                logger.warning(f"CSV file not found at {csv_path}, creating minimal knowledge base")
+                data = {
+                    'Heading': ['La aplicación no permite ingresar pedidos'],
+                    'Content': ['1. Asegúrate que la orden cumple con el monto mínimo (si existe).\n2. Asegúrate de tener sincronizada la aplicación.\n3. Verifica tu conexión a internet.']
+                }
+                return pd.DataFrame(data)
+        except Exception as e:
+            logger.error(f"Error loading knowledge base: {e}")
+            return pd.DataFrame(columns=['Heading', 'Content'])
+
     async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
         """Process incoming queries using GPT for the entire flow"""
         logger.info(f"Processing query: {query}")
@@ -78,34 +111,6 @@ Responde con un JSON estructurado así:
     "knowledge_base_refs": [índices de entradas relevantes o array vacío],
     "response_text": "texto de respuesta al usuario",
     "confidence": número entre 0 y 1
-}}
-
-EJEMPLOS:
-
-Para "¿Está activo el comercio 100005336 de soprole?":
-{{
-    "query_type": "STORE_STATUS",
-    "response_type": "STORE_CHECK",
-    "store_info": {{
-        "company_name": "soprole",
-        "store_id": "100005336"
-    }},
-    "knowledge_base_refs": [],
-    "response_text": "Verificaré el estado del comercio 100005336 de soprole.",
-    "confidence": 0.95
-}}
-
-Para "Estado de mi comercio":
-{{
-    "query_type": "STORE_STATUS",
-    "response_type": "MISSING_INFO",
-    "store_info": {{
-        "company_name": null,
-        "store_id": null
-    }},
-    "knowledge_base_refs": [],
-    "response_text": "Para poder verificar el estado del comercio necesito dos datos importantes:\\n\\n1️⃣ El ID del comercio (por ejemplo: 100005336)\\n2️⃣ El nombre de la empresa (por ejemplo: soprole)\\n\\n¿Podrías proporcionarme esta información? 🤔",
-    "confidence": 0.9
 }}"""
 
             # Get GPT's analysis and response
