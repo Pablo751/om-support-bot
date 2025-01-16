@@ -9,6 +9,15 @@ from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
 # Initialize components
