@@ -158,7 +158,7 @@ class SupportSystem:
     
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system", 
