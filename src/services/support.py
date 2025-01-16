@@ -65,7 +65,7 @@ class SupportSystem:
             try:
                 url = f"mongodb+srv://{self.mongo_username}:{self.mongo_password}@legacy-production-v6.dmjt9.mongodb.net/yom-production?retryWrites=true&w=majority"
                 self.mongo_client = MongoClient(
-                    url, 
+                    url,
                     tlsCAFile=certifi.where(),
                     serverSelectionTimeoutMS=5000
                 )
@@ -105,7 +105,7 @@ class SupportSystem:
             return None
 
     async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-        """Process incoming queries using GPT for the entire flow"""
+        """Process incoming queries using GPT for the entire flow."""
         logger.info(f"Processing query: {query}")
 
         # Handle basic greetings
@@ -127,10 +127,13 @@ class SupportSystem:
                     knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                 knowledge_base_context = "\n\n".join(knowledge_entries)
 
-            # Single GPT call to analyze the query and generate response
+            # -------------------- MODIFIED PROMPT --------------------
+            # We instruct GPT to set "query_type" to "STORE_STATUS_MISSING" if it’s about store status,
+            # but the user didn’t provide both company_name and numeric store_id.
+            # Otherwise, it uses "STORE_STATUS" only if both are present, or "GENERAL" for other queries.
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
 
-Analiza esta consulta de soporte y proporciona la respuesta adecuada.
+Analiza esta consulta de soporte y determina el tipo de consulta.
 
 CONSULTA: {query}
 
@@ -138,22 +141,25 @@ BASE DE CONOCIMIENTOS:
 {knowledge_base_context}
 
 INSTRUCCIONES:
-1. Determina si es una consulta sobre el estado de un comercio o una consulta general
-2. Extrae la información relevante
-3. Genera una respuesta apropiada
+1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
+   - Un ID de comercio (STORE_ID) que sea numérico.
+   - Un NOMBRE de la empresa (COMPANY_NAME).
+2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
+3. Si sí proporcionó ambos, usa "STORE_STATUS".
+4. De lo contrario, "query_type": "GENERAL".
+5. "response_text": tu respuesta final al usuario.
+6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
 
-DEBES RESPONDER CON ESTE FORMATO JSON EXACTO:
+USA ESTE FORMATO EXACTO:
 {{
-    "query_type": "STORE_STATUS",
+    "query_type": "STORE_STATUS"  // o "STORE_STATUS_MISSING" o "GENERAL"
     "store_info": {{
         "company_name": "nombre_empresa o null",
         "store_id": "id_comercio o null"
     }},
-    "response_text": "texto de respuesta al usuario",
-    "use_knowledge_base": false
+    "response_text": "texto de respuesta al usuario"
 }}"""
 
-            # Get GPT's analysis and response
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -180,41 +186,47 @@ DEBES RESPONDER CON ESTE FORMATO JSON EXACTO:
                 analysis = json.loads(content)
                 logger.info(f"Parsed GPT Analysis: {analysis}")
 
-                # Handle store status queries
-                if analysis["query_type"] == "STORE_STATUS":
-                    if analysis["store_info"]["company_name"] and analysis["store_info"]["store_id"]:
-                        # Check store status in MongoDB
-                        store_status = self._check_store_status(
-                            analysis["store_info"]["company_name"],
-                            analysis["store_info"]["store_id"]
+                query_type = analysis.get("query_type", "GENERAL")
+                company_name = analysis.get("store_info", {}).get("company_name")
+                store_id = analysis.get("store_info", {}).get("store_id")
+                response_text = analysis.get("response_text", "")
+
+                # -------------------- HANDLE "STORE_STATUS" --------------------
+                if query_type == "STORE_STATUS":
+                    # The user presumably provided both needed fields, so we check in MongoDB
+                    store_status = self._check_store_status(company_name, store_id)
+                    if store_status is None:
+                        return (
+                            "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
+                            None
                         )
-                        
-                        if store_status is None:
-                            return (
-                                "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
-                                None
-                            )
-                        elif store_status:
-                            return (
-                                f"✅ ¡Buenas noticias! El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está activo y funcionando correctamente.",
-                                None
-                            )
-                        else:
-                            return (
-                                f"❌ El comercio {analysis['store_info']['store_id']} de {analysis['store_info']['company_name']} está desactivado actualmente.",
-                                None
-                            )
+                    elif store_status:
+                        return (
+                            f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.",
+                            None
+                        )
                     else:
                         return (
-                            "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
-                            "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
-                            "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
-                            "¿Podrías proporcionarme esta información? 🤔",
-                            ["company_name", "store_id"]
+                            f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
+                            None
                         )
 
-                # For general queries, return GPT's response
-                return (analysis["response_text"], None)
+                # -------------------- HANDLE "STORE_STATUS_MISSING" --------------------
+                elif query_type == "STORE_STATUS_MISSING":
+                    # GPT thinks user wants a store status but didn't provide all info
+                    # We'll simply ask for what's missing
+                    return (
+                        "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
+                        "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
+                        "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
+                        "¿Podrías proporcionarme esta información? 🤔",
+                        ["company_name", "store_id"]
+                    )
+
+                # -------------------- HANDLE "GENERAL" --------------------
+                else:
+                    # Return GPT's response as a general answer
+                    return (response_text, None)
 
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parsing error with content: {content}")
