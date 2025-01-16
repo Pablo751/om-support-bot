@@ -20,11 +20,11 @@ mongodb_service = None
 async def startup_event():
     """Initialize components with knowledge bases"""
     global support_system, whatsapp_api, mongodb_service
-    
+
     api_key = os.getenv("WASAPI_API_KEY")
     if not api_key:
         raise ValueError("WASAPI_API_KEY not found in environment variables")
-    
+
     # Initialize services
     support_system = SupportSystem(
         knowledge_base_csv='data/knowledge_base.csv',
@@ -56,9 +56,9 @@ async def webhook(webhook_request: WebhookRequest):
         logger.info("Received webhook request:")
         logger.info(f"Message: {webhook_request.message}")
         logger.info(f"WhatsApp ID: {webhook_request.wa_id}")
-
+        
         # Process query and send response
-        response_text, _ = await support_system.process_query(
+        responsetext,  = await support_system.process_query(
             webhook_request.message,
             user_name=None
         )
@@ -66,9 +66,7 @@ async def webhook(webhook_request: WebhookRequest):
         logger.info(f"Generated response: {response_text}")
         logger.info(f"Sending response to WhatsApp ID: {webhook_request.wa_id}")
 
-        # Send the response
         await whatsapp_api.send_message(webhook_request.wa_id, response_text)
-        logger.info("Response sent successfully")
 
         return {
             "success": True, 
@@ -78,7 +76,10 @@ async def webhook(webhook_request: WebhookRequest):
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
-        return {"success": False, "error": f"Internal server error: {str(e)}"}
+        return {
+            "success": False, 
+            "error": f"Internal server error: {str(e)}",
+        }
 
 @app.get("/health")
 async def health_check():
@@ -89,6 +90,6 @@ async def health_check():
         "version": "1.0.0"
     }
 
-if __name__ == "__main__":
+if name == "main":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
