@@ -1,4 +1,3 @@
-# src/main.py
 import os
 import logging
 from datetime import datetime
@@ -10,14 +9,12 @@ from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
-# Configure logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
+
+# (2) A simple set to remember processed message IDs, preventing duplicates
+processed_message_ids = set()
 
 # Initialize components
 support_system = None
@@ -32,7 +29,13 @@ async def startup_event():
     api_key = os.getenv("WASAPI_API_KEY")
     if not api_key:
         raise ValueError("WASAPI_API_KEY not found in environment variables")
-    
+
+    # (3) Check that the knowledge base files exist
+    if not os.path.exists("data/knowledge_base.csv"):
+        logger.warning("CSV knowledge_base.csv not found! The bot will fallback to minimal CSV data.")
+    if not os.path.exists("data/knowledge_base.json"):
+        logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
+
     # Initialize services
     support_system = SupportSystem(
         knowledge_base_csv='data/knowledge_base.csv',
@@ -41,28 +44,29 @@ async def startup_event():
     whatsapp_api = WhatsAppAPI(api_key)
     mongodb_service = MongoDBService()
 
+
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
-    """Handle incoming WhatsApp messages"""
+    """Handle incoming WhatsApp messages."""
     try:
-        # Get the raw request body and headers
         body = await request.json()
         headers = dict(request.headers)
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
         logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
-        # Log everything that comes in
         if 'data' in body:
             logger.info("Wasapi format detected")
             logger.info(f"Data content: {body['data']}")
             message = body['data'].get('message', '')
             wa_id = body['data'].get('wa_id', '')
+            wam_id = body['data'].get('wam_id', '')  # Unique message ID from WhatsApp
             logger.info(f"Extracted from Wasapi - message: {message}, wa_id: {wa_id}")
         else:
             logger.info("Test format detected")
             message = body.get('message', '')
             wa_id = body.get('wa_id', '')
+            wam_id = body.get('wam_id', '')  # Just in case
             logger.info(f"Extracted from test format - message: {message}, wa_id: {wa_id}")
 
         if not message or not wa_id:
@@ -70,7 +74,15 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Process query and send response
+        # (2) Deduplication check – skip if we've already processed this wam_id
+        if wam_id and wam_id in processed_message_ids:
+            logger.info(f"Duplicate message with wam_id={wam_id}, skipping.")
+            return {
+                "success": True,
+                "info": "Duplicate message, ignoring repeated webhook."
+            }
+        processed_message_ids.add(wam_id)
+
         logger.info(f"About to process query: {message} for wa_id: {wa_id}")
         response_text, _ = await support_system.process_query(
             message,
