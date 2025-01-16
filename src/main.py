@@ -9,15 +9,6 @@ from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
 # Initialize components
@@ -29,11 +20,11 @@ mongodb_service = None
 async def startup_event():
     """Initialize components with knowledge bases"""
     global support_system, whatsapp_api, mongodb_service
-
+    
     api_key = os.getenv("WASAPI_API_KEY")
     if not api_key:
         raise ValueError("WASAPI_API_KEY not found in environment variables")
-
+    
     # Initialize services
     support_system = SupportSystem(
         knowledge_base_csv='data/knowledge_base.csv',
@@ -61,23 +52,14 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def webhook(webhook_request: WebhookRequest):
     """Handle incoming WhatsApp messages"""
     try:
-        # Add detailed logging
-        logger.info("Received webhook request:")
-        logger.info(f"Message: {webhook_request.message}")
-        logger.info(f"WhatsApp ID: {webhook_request.wa_id}")
-
         # Process query and send response
-        # Remove the comma after responsetext as it's trying to unpack too many values
-        response_text = await support_system.process_query(
+        response_text, _ = await support_system.process_query(
             webhook_request.message,
             user_name=None
         )
 
-        logger.info(f"Generated response: {response_text}")
-        logger.info(f"Sending response to WhatsApp ID: {webhook_request.wa_id}")
-
         await whatsapp_api.send_message(webhook_request.wa_id, response_text)
-
+        
         return {
             "success": True, 
             "info": "Message processed successfully",
