@@ -67,14 +67,14 @@ async def webhook(webhook_request: WebhookRequest):
         logger.info(f"WhatsApp ID: {webhook_request.wa_id}")
 
         # Process query and send response
-        responsetext,  = await support_system.process_query(
+        # Remove the comma after responsetext as it's trying to unpack too many values
+        response_text = await support_system.process_query(
             webhook_request.message,
             user_name=None
         )
 
         logger.info(f"Generated response: {response_text}")
         logger.info(f"Sending response to WhatsApp ID: {webhook_request.wa_id}")
-
 
         await whatsapp_api.send_message(webhook_request.wa_id, response_text)
 
