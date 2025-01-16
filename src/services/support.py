@@ -107,7 +107,7 @@ class SupportSystem:
     async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
         """Process incoming queries using GPT for the entire flow."""
         logger.info(f"Processing query: {query}")
-
+    
         # Handle basic greetings
         query_lower = query.lower().strip()
         if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
@@ -117,7 +117,7 @@ class SupportSystem:
                 f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
             ]
             return (random.choice(greetings), None)
-
+    
         try:
             # Prepare knowledge base context
             knowledge_base_context = ""
@@ -126,43 +126,39 @@ class SupportSystem:
                 for _, row in self.primary_knowledge_base.iterrows():
                     knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                 knowledge_base_context = "\n\n".join(knowledge_entries)
-
-            # -------------------- MODIFIED PROMPT --------------------
-            # We instruct GPT to set "query_type" to "STORE_STATUS_MISSING" if it’s about store status,
-            # but the user didn’t provide both company_name and numeric store_id.
-            # Otherwise, it uses "STORE_STATUS" only if both are present, or "GENERAL" for other queries.
+    
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
-
-Analiza esta consulta de soporte y determina el tipo de consulta.
-
-CONSULTA: {query}
-
-BASE DE CONOCIMIENTOS:
-{knowledge_base_context}
-
-INSTRUCCIONES:
-1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
-   - Un ID de comercio (STORE_ID) que sea numérico.
-   - Un NOMBRE de la empresa (COMPANY_NAME).
-2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
-3. Si sí proporcionó ambos, usa "STORE_STATUS".
-4. De lo contrario, "query_type": "GENERAL".
-5. "response_text": tu respuesta final al usuario.
-6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
-
-USA ESTE FORMATO EXACTO:
-{{
-    "query_type": "STORE_STATUS"  // o "STORE_STATUS_MISSING" o "GENERAL"
-    "store_info": {{
-        "company_name": "nombre_empresa o null",
-        "store_id": "id_comercio o null"
-    }},
-    "response_text": "texto de respuesta al usuario"
-}}"""
-
+    
+    Analiza esta consulta de soporte y determina el tipo de consulta.
+    
+    CONSULTA: {query}
+    
+    BASE DE CONOCIMIENTOS:
+    {knowledge_base_context}
+    
+    INSTRUCCIONES:
+    1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
+       - Un ID de comercio (STORE_ID) que sea numérico.
+       - Un NOMBRE de la empresa (COMPANY_NAME).
+    2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
+    3. Si sí proporcionó ambos, usa "STORE_STATUS".
+    4. De lo contrario, "query_type": "GENERAL".
+    5. "response_text": tu respuesta final al usuario.
+    6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
+    
+    USA ESTE FORMATO EXACTO:
+    {{
+        "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"
+        "store_info": {{
+            "company_name": "nombre_empresa o null",
+            "store_id": "id_comercio o null"
+        }},
+        "response_text": "texto de respuesta al usuario"
+    }}"""
+    
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4",
                 messages=[
                     {
                         "role": "system", 
@@ -175,25 +171,29 @@ USA ESTE FORMATO EXACTO:
                 ],
                 temperature=0.1
             )
-
+    
             # Extract and clean the content
             content = response.choices[0].message.content.strip()
             content = content.replace('```json', '').replace('```', '').strip()
             logger.info(f"OpenAI response content: {content}")
-
+    
             try:
                 # Parse the JSON response
                 analysis = json.loads(content)
                 logger.info(f"Parsed GPT Analysis: {analysis}")
-
+    
                 query_type = analysis.get("query_type", "GENERAL")
-                company_name = analysis.get("store_info", {}).get("company_name")
-                store_id = analysis.get("store_info", {}).get("store_id")
+                # Safely extract store_info only if it's a dict
+                store_info = analysis.get("store_info", None)
+                if not isinstance(store_info, dict):
+                    store_info = {}
+    
+                company_name = store_info.get("company_name")
+                store_id = store_info.get("store_id")
                 response_text = analysis.get("response_text", "")
-
+    
                 # -------------------- HANDLE "STORE_STATUS" --------------------
                 if query_type == "STORE_STATUS":
-                    # The user presumably provided both needed fields, so we check in MongoDB
                     store_status = self._check_store_status(company_name, store_id)
                     if store_status is None:
                         return (
@@ -210,11 +210,9 @@ USA ESTE FORMATO EXACTO:
                             f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
                             None
                         )
-
+    
                 # -------------------- HANDLE "STORE_STATUS_MISSING" --------------------
                 elif query_type == "STORE_STATUS_MISSING":
-                    # GPT thinks user wants a store status but didn't provide all info
-                    # We'll simply ask for what's missing
                     return (
                         "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
                         "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
@@ -222,20 +220,21 @@ USA ESTE FORMATO EXACTO:
                         "¿Podrías proporcionarme esta información? 🤔",
                         ["company_name", "store_id"]
                     )
-
+    
                 # -------------------- HANDLE "GENERAL" --------------------
                 else:
-                    # Return GPT's response as a general answer
+                    # Just return GPT's response as a general answer
                     return (response_text, None)
-
+    
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parsing error with content: {content}")
                 logger.error(f"Error details: {str(e)}")
                 return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
-
+    
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
             return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
+
 
     def __del__(self):
         """Cleanup MongoDB connection"""
