@@ -108,31 +108,22 @@ async def webhook(request: Request):
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
         logger.info(f"Raw body: {body}")
 
-        # Extract message data
+        # Extract message data - handle both Wasapi webhook and direct API formats
         data = body.get('data', {})
-        if data:  # Wasapi format
+        if isinstance(data, dict):  # Wasapi webhook format
             message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
-            event = data.get('event')
-            message_id = data.get('message_id') or data.get('id')
+            message_id = data.get('wam_id') or data.get('id')  # Use wam_id as per API docs
             
             message_metadata = {
                 'from_agent': data.get('from_agent', False),
                 'agent_id': data.get('agent_id'),
                 'timestamp': datetime.now().isoformat()
             }
-            
-            # Skip non-message events
-            if event and event != "Enviar mensaje":
-                logger.info(f"Skipping event type: {event}")
-                return {
-                    "success": True,
-                    "info": f"Skipped event type: {event}"
-                }
-        else:  # Test format
+        else:  # Direct API format
             message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
-            message_id = body.get('message_id', '')
+            message_id = body.get('wam_id', '')  # Use wam_id from direct API format
             message_metadata = {'from_agent': False}
 
         if not message or not wa_id:
@@ -140,7 +131,9 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Check for duplicates using new system
+        logger.info(f"Processing message: wa_id={wa_id}, message_id={message_id}, message={message[:50]}...")
+
+        # Check for duplicates using dedup system
         if message_dedup.is_duplicate(wa_id, message, message_id):
             logger.info(f"Duplicate message detected for wa_id={wa_id}, message_id={message_id}")
             return {
@@ -158,10 +151,10 @@ async def webhook(request: Request):
 
         # Only send response if we got one
         if response_text:
-            logger.info(f"Sending response for wa_id={wa_id}")
+            logger.info(f"Sending response to wa_id={wa_id}")
             try:
                 await whatsapp_api.send_message(wa_id, response_text)
-                logger.info(f"Successfully sent response for wa_id={wa_id}")
+                logger.info(f"Successfully sent response to wa_id={wa_id}")
             except Exception as e:
                 logger.error(f"Error sending WhatsApp message: {e}")
                 raise
@@ -177,7 +170,7 @@ async def webhook(request: Request):
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
         return {"success": False, "error": f"Internal server error: {str(e)}"}
-
+        
 @app.get("/debug/messages")
 async def get_debug_info():
     """Get information about processed messages"""
