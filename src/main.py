@@ -119,6 +119,20 @@ async def webhook(request: Request):
         logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
 
+@app.get("/debug/messages")
+async def get_debug_info():
+    """Get information about processed messages"""
+    return {
+        "processed_messages_count": len(processed_message_ids),
+        "last_10_messages": list(processed_message_ids)[-10:] if processed_message_ids else []
+    }
+
+@app.post("/debug/clear-messages")
+async def clear_processed_messages():
+    """Clear the processed messages set"""
+    processed_message_ids.clear()
+    return {"success": True, "message": "Processed messages cleared"}
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
