@@ -10,6 +10,7 @@ from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
 logger = logging.getLogger(__name__)
+processed_message_ids = set()
 
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
@@ -46,6 +47,8 @@ async def startup_event():
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
     """Handle incoming WhatsApp messages with improved deduplication."""
+    global processed_message_ids  # Add this line inside the function
+    
     try:
         body = await request.json()
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
