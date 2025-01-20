@@ -43,10 +43,9 @@ async def startup_event():
     whatsapp_api = WhatsAppAPI(api_key)
     mongodb_service = MongoDBService()
 
-
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
-    """Handle incoming WhatsApp messages with fixed deduplication."""
+    """Handle incoming WhatsApp messages with improved deduplication."""
     try:
         body = await request.json()
         headers = dict(request.headers)
@@ -57,11 +56,9 @@ async def webhook(request: Request):
         # Extract message data
         data = body.get('data', {})
         if data:  # Wasapi format
-            logger.info("Wasapi format detected")
-            message = data.get('message', '')
+            message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
             wam_id = data.get('wam_id', '')
-            # Check if this is an event we should process
             event = data.get('event')
             if event and event != "Enviar mensaje":
                 logger.info(f"Skipping event type: {event}")
@@ -76,7 +73,7 @@ async def webhook(request: Request):
                 'timestamp': datetime.now().isoformat()
             }
         else:  # Test format
-            message = body.get('message', '')
+            message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
             wam_id = body.get('wam_id', '')
             message_metadata = {'from_agent': False}
@@ -86,23 +83,26 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Create a unique key for the incoming message only
-        message_key = f"{wa_id}:{message}"
+        # Create a unique message ID using ONLY the input message
         if wam_id:
-            message_key = f"{message_key}:{wam_id}"
+            # If we have a WhatsApp message ID, use it as primary deduplication
+            dedup_key = f"{wa_id}:{wam_id}"
+        else:
+            # Fallback to using message content + wa_id
+            dedup_key = f"{wa_id}:{message}"
 
-        logger.info(f"Message key for deduplication: {message_key}")
+        logger.info(f"Using deduplication key: {dedup_key}")
         
         # Check if we've already processed this message
-        if message_key in processed_message_ids:
-            logger.info(f"Duplicate message detected with key={message_key}, skipping.")
+        if dedup_key in processed_message_ids:
+            logger.info(f"Duplicate message detected with key={dedup_key}, skipping.")
             return {
                 "success": True,
                 "info": "Duplicate message ignored"
             }
 
-        # Add to processed messages before processing
-        processed_message_ids.add(message_key)
+        # Add to processed messages BEFORE processing
+        processed_message_ids.add(dedup_key)
         
         # Cleanup if needed (keep last 1000 messages)
         if len(processed_message_ids) > 1000:
@@ -110,7 +110,7 @@ async def webhook(request: Request):
             processed_message_ids.clear()
             processed_message_ids.update(temp_list[-1000:])
 
-        logger.info(f"Processing new message: {message_key}")
+        logger.info(f"Processing new message with dedup_key: {dedup_key}")
         
         # Process the query
         response_text, _ = await support_system.process_query(
@@ -120,18 +120,17 @@ async def webhook(request: Request):
             user_name=None
         )
 
-        # Only send response if we got one
+        # Only send response if we got one and haven't sent it before
         if response_text:
-            logger.info(f"Sending response for {message_key}")
+            logger.info(f"Sending response for {dedup_key}")
             try:
                 await whatsapp_api.send_message(wa_id, response_text)
-                logger.info(f"Successfully sent response for {message_key}")
+                logger.info(f"Successfully sent response for {dedup_key}")
             except Exception as e:
                 logger.error(f"Error sending WhatsApp message: {e}")
-                # Don't remove from processed_message_ids even if send fails
                 raise
         else:
-            logger.info(f"No response needed for {message_key} (likely human handling)")
+            logger.info(f"No response needed for {dedup_key} (likely human handling)")
         
         return {
             "success": True,
@@ -144,20 +143,22 @@ async def webhook(request: Request):
         logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
 
-@app.post("/debug/clear-messages")
-async def clear_processed_messages():
-    """Clear the processed messages set"""
-    processed_message_ids.clear()
-    return {"success": True, "message": "Processed messages cleared"}
-
 @app.get("/debug/messages")
 async def get_debug_info():
     """Get information about processed messages"""
     messages_list = list(processed_message_ids)
     return {
         "processed_messages_count": len(messages_list),
-        "last_10_messages": messages_list[-10:] if messages_list else []
+        "last_10_messages": messages_list[-10:] if messages_list else [],
+        "explanation": "Deduplication keys are now in format: 'wa_id:wam_id' or 'wa_id:message'"
     }
+
+@app.post("/debug/clear-messages")
+async def clear_processed_messages():
+    """Clear the processed messages set"""
+    processed_message_ids.clear()
+    return {"success": True, "message": "Processed messages cleared"}
+
 
 @app.get("/health")
 async def health_check():
