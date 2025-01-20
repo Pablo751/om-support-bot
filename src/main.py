@@ -48,9 +48,7 @@ async def webhook(request: Request):
     """Handle incoming WhatsApp messages with improved deduplication."""
     try:
         body = await request.json()
-        headers = dict(request.headers)
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
-        logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
         # Extract message data
@@ -58,8 +56,9 @@ async def webhook(request: Request):
         if data:  # Wasapi format
             message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
-            wam_id = data.get('wam_id', '')
             event = data.get('event')
+            
+            # Skip non-message events
             if event and event != "Enviar mensaje":
                 logger.info(f"Skipping event type: {event}")
                 return {
@@ -75,7 +74,6 @@ async def webhook(request: Request):
         else:  # Test format
             message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
-            wam_id = body.get('wam_id', '')
             message_metadata = {'from_agent': False}
 
         if not message or not wa_id:
@@ -83,13 +81,10 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Create a unique message ID using ONLY the input message
-        if wam_id:
-            # If we have a WhatsApp message ID, use it as primary deduplication
-            dedup_key = f"{wa_id}:{wam_id}"
-        else:
-            # Fallback to using message content + wa_id
-            dedup_key = f"{wa_id}:{message}"
+        # Create a normalized deduplication key using wa_id and message content
+        # Remove extra spaces and make case-insensitive
+        normalized_message = ' '.join(message.lower().split())
+        dedup_key = f"{wa_id}:{normalized_message}"
 
         logger.info(f"Using deduplication key: {dedup_key}")
         
@@ -104,7 +99,7 @@ async def webhook(request: Request):
         # Add to processed messages BEFORE processing
         processed_message_ids.add(dedup_key)
         
-        # Cleanup if needed (keep last 1000 messages)
+        # Cleanup old messages (keep last 1000)
         if len(processed_message_ids) > 1000:
             temp_list = list(processed_message_ids)
             processed_message_ids.clear()
@@ -120,7 +115,7 @@ async def webhook(request: Request):
             user_name=None
         )
 
-        # Only send response if we got one and haven't sent it before
+        # Only send response if we got one
         if response_text:
             logger.info(f"Sending response for {dedup_key}")
             try:
