@@ -46,7 +46,7 @@ async def startup_event():
 
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
-    """Handle incoming WhatsApp messages."""
+    """Handle incoming WhatsApp messages with improved deduplication."""
     try:
         body = await request.json()
         headers = dict(request.headers)
@@ -60,8 +60,7 @@ async def webhook(request: Request):
             logger.info("Wasapi format detected")
             message = data.get('message', '')
             wa_id = data.get('wa_id', '')
-            wam_id = data.get('wam_id', '')
-            # Extract agent information
+            wam_id = data.get('wam_id', '')  # Unique message ID
             message_metadata = {
                 'from_agent': data.get('from_agent', False),
                 'agent_id': data.get('agent_id'),
@@ -79,18 +78,24 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Deduplication check
-        if wam_id and wam_id in processed_message_ids:
-            logger.info(f"Duplicate message with wam_id={wam_id}, skipping.")
+        # Enhanced deduplication check
+        message_key = f"{wa_id}:{message}:{wam_id}"  # Combine all identifiers
+        if message_key in processed_message_ids:
+            logger.info(f"Duplicate message detected with key={message_key}, skipping.")
             return {
                 "success": True,
-                "info": "Duplicate message, ignoring repeated webhook."
+                "info": "Duplicate message, ignoring webhook."
             }
-        processed_message_ids.add(wam_id)
-
-        logger.info(f"About to process query: {message} for wa_id: {wa_id}")
         
-        # Updated process_query call with new parameters
+        # Clean up old message IDs (optional, to prevent memory growth)
+        if len(processed_message_ids) > 10000:  # Arbitrary limit
+            processed_message_ids.clear()
+        
+        processed_message_ids.add(message_key)
+        
+        logger.info(f"Processing new message with key: {message_key}")
+        
+        # Process the query
         response_text, _ = await support_system.process_query(
             query=message,
             wa_id=wa_id,
@@ -98,15 +103,12 @@ async def webhook(request: Request):
             user_name=None
         )
 
-        # Only send response if we got one (bot might be silent if human is handling)
+        # Only send response if we got one
         if response_text:
-            logger.info(f"Generated response: {response_text}")
-            logger.info(f"Attempting to send to wa_id: {wa_id}")
+            logger.info(f"Sending response for {message_key}")
             response = await whatsapp_api.send_message(wa_id, response_text)
             logger.info(f"Wasapi send response: {response}")
-        else:
-            logger.info("No response generated (conversation likely handled by human)")
-
+        
         return {
             "success": True,
             "info": "Message processed successfully",
