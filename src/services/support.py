@@ -259,26 +259,41 @@ class EnhancedSupportSystem(SupportSystem):
         return self.conversations[wa_id]
 
     def _should_bot_respond(self, wa_id: str, message_metadata: dict) -> bool:
-        state = self._get_conversation_state(wa_id)
+        """Each wa_id (conversation) is handled independently"""
+        state = self._get_conversation_state(wa_id)  # Get state for this specific conversation
         
-        # If message is from an agent, update state
+        logger.info(f"Checking if bot should respond for wa_id: {wa_id}")
+        logger.info(f"Current state for {wa_id} - human_assigned: {state.human_assigned}, last_interaction: {state.last_human_interaction}")
+        
+        # If THIS conversation is being handled by an agent
         if message_metadata.get('from_agent'):
+            logger.info(f"Message is from agent for wa_id: {wa_id}, updating state")
             state.human_assigned = True
             state.last_human_interaction = datetime.now()
             return False
-            
-        # If no human assigned, bot should respond
+        
+        # Check if THIS conversation has a human assigned
         if not state.human_assigned:
+            logger.info(f"No human assigned for wa_id: {wa_id}, bot will respond")
             return True
+        
+        # Check timeout for THIS conversation
+        if state.last_human_interaction:
+            time_since_last = (datetime.now() - state.last_human_interaction).total_seconds()
+            logger.info(f"Time since last human interaction for {wa_id}: {time_since_last} seconds")
             
-        # Check timeout
-        if (state.last_human_interaction and 
-            (datetime.now() - state.last_human_interaction).total_seconds() > state.handoff_threshold):
-            state.human_assigned = False
-            state.last_human_interaction = None
-            return True
-            
-        return False
+            if time_since_last > state.handoff_threshold:
+                logger.info(f"Human timeout reached for {wa_id}, bot will respond")
+                state.human_assigned = False
+                state.last_human_interaction = None
+                return True
+            else:
+                logger.info(f"Human still handling {wa_id}, bot will not respond")
+                return False
+        
+        logger.info(f"No last interaction timestamp found for {wa_id}, defaulting to bot")
+        state.human_assigned = False
+        return True
 
     async def process_query(self, query: str, wa_id: str, message_metadata: dict, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
         """Enhanced version that first checks if bot should respond"""
