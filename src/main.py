@@ -47,20 +47,35 @@ async def startup_event():
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
     """Handle incoming WhatsApp messages with improved deduplication."""
-    global processed_message_ids  # Add this line inside the function
+    global processed_message_ids
     
     try:
-        body = await request.json()
+        # Add raw request logging
+        raw_body = await request.body()
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
-        logger.info(f"Raw body: {body}")
+        logger.info(f"Raw request body: {raw_body}")
+        
+        try:
+            body = await request.json()
+            logger.info(f"Parsed JSON body: {json.dumps(body, indent=2)}")
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {str(e)}")
+            logger.error(f"Attempted to parse: {raw_body}")
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": f"Invalid JSON: {str(e)}"}
+            )
 
         # Extract message data
         data = body.get('data', {})
         if data:  # Wasapi format
+            logger.info("Processing Wasapi format message")
             message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
-            wam_id = data.get('wam_id')  # Extract wam_id
+            wam_id = data.get('wam_id')
             event = data.get('event')
+            
+            logger.info(f"Extracted data - message: {message}, wa_id: {wa_id}, wam_id: {wam_id}, event: {event}")
             
             # Skip non-message events
             if event and event != "Enviar mensaje":
@@ -76,17 +91,22 @@ async def webhook(request: Request):
                 'timestamp': datetime.now().isoformat()
             }
         else:  # Test format
+            logger.info("Processing test format message")
             message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
-            wam_id = body.get('wam_id')  # Extract wam_id
+            wam_id = body.get('wam_id')
             message_metadata = {'from_agent': False}
+            logger.info(f"Extracted test data - message: {message}, wa_id: {wa_id}, wam_id: {wam_id}")
 
         if not message or not wa_id:
-            error_msg = "Missing message or wa_id"
+            error_msg = f"Missing required fields - message: '{message}', wa_id: '{wa_id}'"
             logger.error(error_msg)
-            raise HTTPException(status_code=400, detail=error_msg)
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": error_msg}
+            )
 
-        # Use wam_id for deduplication if available, fallback to content-based dedup
+        # Use wam_id for deduplication if available
         if wam_id:
             dedup_key = f"{wa_id}:{wam_id}"
             logger.info(f"Using wam_id based deduplication key: {dedup_key}")
@@ -115,13 +135,18 @@ async def webhook(request: Request):
 
         logger.info(f"Processing new message with dedup_key: {dedup_key}")
         
-        # Process the query
-        response_text, _ = await support_system.process_query(
-            query=message,
-            wa_id=wa_id,
-            message_metadata=message_metadata,
-            user_name=None
-        )
+        try:
+            # Process the query
+            response_text, _ = await support_system.process_query(
+                query=message,
+                wa_id=wa_id,
+                message_metadata=message_metadata,
+                user_name=None
+            )
+        except Exception as e:
+            logger.error(f"Error in query processing: {str(e)}")
+            logger.error(f"Full query processing traceback: {traceback.format_exc()}")
+            raise
 
         # Only send response if we got one
         if response_text:
@@ -131,6 +156,7 @@ async def webhook(request: Request):
                 logger.info(f"Successfully sent response for {dedup_key}")
             except Exception as e:
                 logger.error(f"Error sending WhatsApp message: {e}")
+                logger.error(f"WhatsApp API error traceback: {traceback.format_exc()}")
                 raise
         else:
             logger.info(f"No response needed for {dedup_key} (likely human handling)")
@@ -142,9 +168,12 @@ async def webhook(request: Request):
         }
 
     except Exception as e:
-        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        logger.error(f"Error processing webhook: {str(e)}")
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        return {"success": False, "error": f"Internal server error: {str(e)}"}
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": f"Internal server error: {str(e)}"}
+        )
 
 @app.get("/debug/messages")
 async def get_debug_info():
