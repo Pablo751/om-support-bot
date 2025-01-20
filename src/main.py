@@ -103,63 +103,77 @@ async def startup_event():
 
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
+    """Handle incoming WhatsApp messages."""
     try:
         body = await request.json()
+        headers = dict(request.headers)
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
+        logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
-        # Extract message data - handle both Wasapi webhook and direct API formats
-        data = body.get('data', {})
-        if isinstance(data, dict):  # Wasapi webhook format
-            message = data.get('message', '').strip()
-            wa_id = data.get('wa_id', '')
-            message_id = data.get('wam_id') or data.get('id')  # Use wam_id as per API docs
+        if 'data' in body:
+            logger.info("Wasapi format detected")
+            logger.info(f"Data content: {body['data']}")
+            message = body['data'].get('message', '')
+            wa_id = body['data'].get('wa_id', '')
+            wam_id = body['data'].get('wam_id', '')  # Unique message ID from WhatsApp
+            event = body['data'].get('event', '')  # Add this line
+            logger.info(f"Extracted from Wasapi - message: {message}, wa_id: {wa_id}, wam_id: {wam_id}, event: {event}")
             
-            message_metadata = {
-                'from_agent': data.get('from_agent', False),
-                'agent_id': data.get('agent_id'),
-                'timestamp': datetime.now().isoformat()
-            }
-        else:  # Direct API format
-            message = body.get('message', '').strip()
+            # Skip certain event types if needed
+            if event and event not in ['message', 'Enviar mensaje']:  # Add relevant event types
+                logger.info(f"Skipping event type: {event}")
+                return {
+                    "success": True,
+                    "info": f"Skipped event type: {event}"
+                }
+        else:
+            logger.info("Test format detected")
+            message = body.get('message', '')
             wa_id = body.get('wa_id', '')
-            message_id = body.get('wam_id', '')  # Use wam_id from direct API format
-            message_metadata = {'from_agent': False}
+            wam_id = body.get('wam_id', '')
+            logger.info(f"Extracted from test format - message: {message}, wa_id: {wa_id}, wam_id: {wam_id}")
 
         if not message or not wa_id:
             error_msg = "Missing message or wa_id"
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        logger.info(f"Processing message: wa_id={wa_id}, message_id={message_id}, message={message[:50]}...")
+        # Create a deduplication key that includes both message and wa_id
+        dedup_key = f"{wa_id}:{message.strip()}"
+        logger.info(f"Deduplication key: {dedup_key}")
 
-        # Check for duplicates using dedup system
-        if message_dedup.is_duplicate(wa_id, message, message_id):
-            logger.info(f"Duplicate message detected for wa_id={wa_id}, message_id={message_id}")
+        # Check both wam_id and content-based deduplication
+        if (wam_id and wam_id in processed_message_ids) or dedup_key in processed_message_ids:
+            logger.info(f"Duplicate message detected. wam_id={wam_id}, dedup_key={dedup_key}")
             return {
                 "success": True,
-                "info": "Duplicate message ignored"
+                "info": "Duplicate message, ignoring repeated webhook."
             }
 
-        # Process the query
+        # Add both to processed sets
+        if wam_id:
+            processed_message_ids.add(wam_id)
+        processed_message_ids.add(dedup_key)
+        
+        # Cleanup old messages (keep last 1000)
+        if len(processed_message_ids) > 1000:
+            temp_list = list(processed_message_ids)
+            processed_message_ids.clear()
+            processed_message_ids.update(temp_list[-1000:])
+
+        logger.info(f"About to process query: {message} for wa_id: {wa_id}")
         response_text, _ = await support_system.process_query(
-            query=message,
-            wa_id=wa_id,
-            message_metadata=message_metadata,
+            message,
             user_name=None
         )
 
-        # Only send response if we got one
-        if response_text:
-            logger.info(f"Sending response to wa_id={wa_id}")
-            try:
-                await whatsapp_api.send_message(wa_id, response_text)
-                logger.info(f"Successfully sent response to wa_id={wa_id}")
-            except Exception as e:
-                logger.error(f"Error sending WhatsApp message: {e}")
-                raise
-        else:
-            logger.info(f"No response needed for wa_id={wa_id} (likely human handling)")
+        logger.info(f"Generated response: {response_text}")
+        logger.info(f"Attempting to send to wa_id: {wa_id}")
+        
+        # Send the response
+        response = await whatsapp_api.send_message(wa_id, response_text)
+        logger.info(f"Wasapi send response: {response}")
         
         return {
             "success": True,
@@ -169,6 +183,8 @@ async def webhook(request: Request):
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
         
 @app.get("/debug/messages")
