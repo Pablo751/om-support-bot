@@ -281,153 +281,154 @@ class EnhancedSupportSystem(SupportSystem):
         return False
 
     async def process_query(self, query: str, wa_id: str, message_metadata: dict, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-        """Enhanced query processing that preserves original classification logic"""
-        logger.info(f"Processing query: {query}")
-
-        # First check if we should respond at all
-        if not self._should_bot_respond(wa_id, message_metadata):
-            return None, None
-
-        # Handle basic greetings (preserve original logic)
-        query_lower = query.lower().strip()
-        if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
-            greetings = [
-                f"¡Hola{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo ayudarte hoy?",
-                f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
-                f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
-            ]
-            return (random.choice(greetings), None)
-
-        try:
-            # Prepare knowledge base context (preserve original logic)
-            knowledge_base_context = ""
-            if not self.primary_knowledge_base.empty:
-                knowledge_entries = []
-                for _, row in self.primary_knowledge_base.iterrows():
-                    knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
-                knowledge_base_context = "\n\n".join(knowledge_entries)
-
-            # First, check if query needs human attention
-            confidence_prompt = f"""Analiza esta consulta y determina si requiere atención humana.
-
-            CONSULTA: {query}
-
-            BASE DE CONOCIMIENTOS:
-            {knowledge_base_context}
-
-            Considera que una consulta necesita atención humana si:
-            1. Es un problema técnico complejo
-            2. Involucra problemas específicos de una cuenta
-            3. El usuario está claramente frustrado o enojado
-            4. Requiere acceso a sistemas no disponibles para el bot
-            5. Es sobre un tema sensible
-            6. El usuario pide explícitamente un agente humano
-            7. La consulta está fuera del alcance de la base de conocimientos
-
-            RESPONDE SOLO CON JSON:
-            {{
-                "needs_human": true/false,
-                "reason": "explicación breve"
-            }}"""
-
-            human_check = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
-                    {"role": "user", "content": confidence_prompt}
-                ],
-                temperature=0.1
-            )
-
-            human_analysis = json.loads(human_check.choices[0].message.content.strip())
-            
-            if human_analysis.get("needs_human", False):
-                # Update state and return handoff message
-                state = self._get_conversation_state(wa_id)
-                state.human_assigned = True
-                state.last_human_interaction = datetime.now()
-                return ("Para brindarte la mejor asistencia posible, transferiré tu consulta a un agente de soporte. En breve te atenderá un agente humano. 🤝", None)
-
-            # If bot can handle it, continue with original classification logic
-            classification_prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
-
-            Analiza esta consulta de soporte y determina el tipo de consulta.
-
-            CONSULTA: {query}
-
-            BASE DE CONOCIMIENTOS:
-            {knowledge_base_context}
-
-            INSTRUCCIONES:
-            1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
-               - Un ID de comercio (STORE_ID) que sea numérico.
-               - Un NOMBRE de la empresa (COMPANY_NAME).
-            2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
-            3. Si sí proporcionó ambos, usa "STORE_STATUS".
-            4. De lo contrario, "query_type": "GENERAL".
-            5. "response_text": tu respuesta final al usuario.
-            6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
-
-            USA ESTE FORMATO EXACTO:
-            {{
-                "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"
-                "store_info": {{
-                    "company_name": "nombre_empresa o null",
-                    "store_id": "id_comercio o null"
-                }},
-                "response_text": "texto de respuesta al usuario"
-            }}"""
-
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
-                    {"role": "user", "content": classification_prompt}
-                ],
-                temperature=0.1
-            )
-
-            # Process response (preserve original logic)
-            content = response.choices[0].message.content.strip()
-            content = content.replace('```json', '').replace('```', '').strip()
-            
-            analysis = json.loads(content)
-            query_type = analysis.get("query_type", "GENERAL")
-            store_info = analysis.get("store_info", {}) if isinstance(analysis.get("store_info"), dict) else {}
-            
-            company_name = store_info.get("company_name")
-            store_id = store_info.get("store_id")
-            response_text = analysis.get("response_text", "")
-
-            # Handle different query types (preserve original logic)
-            if query_type == "STORE_STATUS":
-                store_status = self._check_store_status(company_name, store_id)
-                if store_status is None:
-                    return ("No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍", None)
-                elif store_status:
-                    return (f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.", None)
-                else:
-                    return (f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.", None)
-
-            elif query_type == "STORE_STATUS_MISSING":
-                return (
-                    "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
-                    "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
-                    "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
-                    "¿Podrías proporcionarme esta información? 🤔",
-                    ["company_name", "store_id"]
+            """Enhanced query processing that preserves original classification logic"""
+            logger.info(f"Processing query: {query}")
+    
+            # First check if we should respond at all
+            if not self._should_bot_respond(wa_id, message_metadata):
+                return None, None
+    
+            # Handle basic greetings (preserve original logic)
+            query_lower = query.lower().strip()
+            if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
+                greetings = [
+                    f"¡Hola{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo ayudarte hoy?",
+                    f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
+                    f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
+                ]
+                return (random.choice(greetings), None)
+    
+            try:
+                # Prepare knowledge base context
+                knowledge_base_context = ""
+                if not self.primary_knowledge_base.empty:
+                    knowledge_entries = []
+                    for _, row in self.primary_knowledge_base.iterrows():
+                        knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
+                    knowledge_base_context = "\n\n".join(knowledge_entries)
+    
+                # First, check if query needs human attention
+                confidence_prompt = f"""Analiza esta consulta y determina si requiere atención humana.
+    
+                CONSULTA: {query}
+    
+                BASE DE CONOCIMIENTOS:
+                {knowledge_base_context}
+    
+                Considera que una consulta necesita atención humana si:
+                1. Es un problema técnico complejo
+                2. Involucra problemas específicos de una cuenta
+                3. El usuario está claramente frustrado o enojado
+                4. Requiere acceso a sistemas no disponibles para el bot
+                5. Es sobre un tema sensible
+                6. El usuario pide explícitamente un agente humano
+                7. La consulta está fuera del alcance de la base de conocimientos
+    
+                RESPONDE SOLO CON JSON:
+                {{
+                    "needs_human": true/false,
+                    "reason": "explicación breve"
+                }}"""
+    
+                # Removed await - using synchronous call
+                human_check = self.openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
+                        {"role": "user", "content": confidence_prompt}
+                    ],
+                    temperature=0.1
                 )
-
-            else:
-                return (response_text, None)
-
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {e}")
-            return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
-
-        except Exception as e:
-            logger.error(f"Error processing query: {e}", exc_info=True)
-            return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
+    
+                human_analysis = json.loads(human_check.choices[0].message.content.strip())
+                
+                if human_analysis.get("needs_human", False):
+                    # Update state and return handoff message
+                    state = self._get_conversation_state(wa_id)
+                    state.human_assigned = True
+                    state.last_human_interaction = datetime.now()
+                    return ("Para brindarte la mejor asistencia posible, transferiré tu consulta a un agente de soporte. En breve te atenderá un agente humano. 🤝", None)
+    
+                # If bot can handle it, continue with classification
+                classification_prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
+    
+                Analiza esta consulta de soporte y determina el tipo de consulta.
+    
+                CONSULTA: {query}
+    
+                BASE DE CONOCIMIENTOS:
+                {knowledge_base_context}
+    
+                INSTRUCCIONES:
+                1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
+                   - Un ID de comercio (STORE_ID) que sea numérico.
+                   - Un NOMBRE de la empresa (COMPANY_NAME).
+                2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
+                3. Si sí proporcionó ambos, usa "STORE_STATUS".
+                4. De lo contrario, "query_type": "GENERAL".
+                5. "response_text": tu respuesta final al usuario.
+                6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
+    
+                USA ESTE FORMATO EXACTO:
+                {{
+                    "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"
+                    "store_info": {{
+                        "company_name": "nombre_empresa o null",
+                        "store_id": "id_comercio o null"
+                    }},
+                    "response_text": "texto de respuesta al usuario"
+                }}"""
+    
+                # Removed await - using synchronous call
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
+                        {"role": "user", "content": classification_prompt}
+                    ],
+                    temperature=0.1
+                )
+    
+                content = response.choices[0].message.content.strip()
+                content = content.replace('```json', '').replace('```', '').strip()
+                
+                analysis = json.loads(content)
+                query_type = analysis.get("query_type", "GENERAL")
+                store_info = analysis.get("store_info", {}) if isinstance(analysis.get("store_info"), dict) else {}
+                
+                company_name = store_info.get("company_name")
+                store_id = store_info.get("store_id")
+                response_text = analysis.get("response_text", "")
+    
+                # Handle different query types
+                if query_type == "STORE_STATUS":
+                    store_status = self._check_store_status(company_name, store_id)
+                    if store_status is None:
+                        return ("No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍", None)
+                    elif store_status:
+                        return (f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.", None)
+                    else:
+                        return (f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.", None)
+    
+                elif query_type == "STORE_STATUS_MISSING":
+                    return (
+                        "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
+                        "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
+                        "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
+                        "¿Podrías proporcionarme esta información? 🤔",
+                        ["company_name", "store_id"]
+                    )
+    
+                else:
+                    return (response_text, None)
+    
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error: {e}")
+                return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
+    
+            except Exception as e:
+                logger.error(f"Error processing query: {e}", exc_info=True)
+                return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
 
     def handle_human_response(self, wa_id: str):
         """Record human agent interaction"""
