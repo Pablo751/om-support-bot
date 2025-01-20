@@ -331,7 +331,7 @@ class EnhancedSupportSystem(SupportSystem):
             }}"""
 
             human_check = await self.openai_client.chat.completions.create(
-                model="gpt-4-mini",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
                     {"role": "user", "content": confidence_prompt}
@@ -379,7 +379,7 @@ class EnhancedSupportSystem(SupportSystem):
             }}"""
 
             response = await self.openai_client.chat.completions.create(
-                model="gpt-4-mini",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
                     {"role": "user", "content": classification_prompt}
