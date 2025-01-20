@@ -9,6 +9,9 @@ from src.services.support import EnhancedSupportSystem
 from src.services.whatsapp import WhatsAppAPI
 from src.services.mongodb import MongoDBService
 
+import traceback  # Add this import
+
+
 logger = logging.getLogger(__name__)
 processed_message_ids = set()
 
@@ -50,10 +53,10 @@ async def webhook(request: Request):
     global processed_message_ids
     
     try:
-        # Add raw request logging
-        raw_body = await request.body()
+        body = await request.json()
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
-        logger.info(f"Raw request body: {raw_body}")
+        logger.info(f"Raw body: {body}")
+
         
         try:
             body = await request.json()
@@ -175,6 +178,8 @@ async def webhook(request: Request):
             content={"success": False, "error": f"Internal server error: {str(e)}"}
         )
 
+
+
 @app.get("/debug/messages")
 async def get_debug_info():
     """Get information about processed messages"""
@@ -182,14 +187,16 @@ async def get_debug_info():
     return {
         "processed_messages_count": len(messages_list),
         "last_10_messages": messages_list[-10:] if messages_list else [],
-        "explanation": "Deduplication keys are now in format: 'wa_id:wam_id' or 'wa_id:message'"
+        "explanation": "Deduplication keys format: 'wa_id:wam_id' or 'wa_id:normalized_message'"
     }
 
 @app.post("/debug/clear-messages")
 async def clear_processed_messages():
     """Clear the processed messages set"""
+    global processed_message_ids
     processed_message_ids.clear()
     return {"success": True, "message": "Processed messages cleared"}
+
 
 
 @app.get("/health")
