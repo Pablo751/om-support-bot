@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-
+from collections import defaultdict
+import time
 from src.models.schemas import MessageResponse
 from src.services.support import EnhancedSupportSystem
 from src.services.whatsapp import WhatsAppAPI
@@ -13,8 +14,66 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
-# (2) A simple set to remember processed message IDs, preventing duplicates
-processed_message_ids = set()
+class MessageDeduplication:
+    def __init__(self, max_age_seconds=3600):  # 1 hour default
+        self.processed_message_ids = set()  # For message_id based dedup
+        self.recent_messages = defaultdict(list)  # For content based dedup
+        self.max_age_seconds = max_age_seconds
+    
+    def _cleanup_old_messages(self, current_time):
+        # Remove messages older than max_age_seconds
+        cutoff_time = current_time - self.max_age_seconds
+        for wa_id in list(self.recent_messages.keys()):
+            self.recent_messages[wa_id] = [
+                (msg, ts) for msg, ts in self.recent_messages[wa_id]
+                if ts > cutoff_time
+            ]
+            if not self.recent_messages[wa_id]:
+                del self.recent_messages[wa_id]
+    
+    def is_duplicate(self, wa_id, message, message_id=None, current_time=None):
+        if current_time is None:
+            current_time = time.time()
+            
+        # Clean up old messages first
+        self._cleanup_old_messages(current_time)
+        
+        # If we have a message_id and it's already processed, it's a duplicate
+        if message_id and message_id in self.processed_message_ids:
+            return True
+            
+        # Check for recent identical messages from the same user
+        normalized_message = ' '.join(message.lower().split())
+        recent_messages = self.recent_messages[wa_id]
+        
+        # Check if we've seen this exact message in the last minute
+        ONE_MINUTE = 60
+        for msg, ts in recent_messages:
+            if msg == normalized_message and (current_time - ts) < ONE_MINUTE:
+                return True
+                
+        # Not a duplicate - add to tracking
+        if message_id:
+            self.processed_message_ids.add(message_id)
+        self.recent_messages[wa_id].append((normalized_message, current_time))
+        
+        # Trim processed_message_ids if it gets too large
+        if len(self.processed_message_ids) > 10000:
+            self.processed_message_ids.clear()
+        
+        return False
+
+    def get_debug_info(self):
+        """Get debug information about current state"""
+        return {
+            "processed_ids_count": len(self.processed_message_ids),
+            "recent_messages": {wa_id: [(msg, datetime.fromtimestamp(ts).isoformat()) 
+                                      for msg, ts in msgs] 
+                              for wa_id, msgs in self.recent_messages.items()}
+        }
+
+# Create the deduplication instance AFTER the class is defined
+message_dedup = MessageDeduplication()
 
 # Initialize components
 support_system = None
@@ -35,7 +94,6 @@ async def startup_event():
     if not os.path.exists("data/knowledge_base.json"):
         logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
 
-    # Change to EnhancedSupportSystem
     support_system = EnhancedSupportSystem(
         knowledge_base_csv='data/knowledge_base.csv',
         knowledge_base_json='data/knowledge_base.json'
@@ -56,9 +114,13 @@ async def webhook(request: Request):
             message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
             event = data.get('event')
-            # Extract message ID if available
             message_id = data.get('message_id') or data.get('id')
-            timestamp = data.get('timestamp') or datetime.now().timestamp()
+            
+            message_metadata = {
+                'from_agent': data.get('from_agent', False),
+                'agent_id': data.get('agent_id'),
+                'timestamp': datetime.now().isoformat()
+            }
             
             # Skip non-message events
             if event and event != "Enviar mensaje":
@@ -67,17 +129,10 @@ async def webhook(request: Request):
                     "success": True,
                     "info": f"Skipped event type: {event}"
                 }
-
-            message_metadata = {
-                'from_agent': data.get('from_agent', False),
-                'agent_id': data.get('agent_id'),
-                'timestamp': datetime.fromtimestamp(timestamp).isoformat() if isinstance(timestamp, (int, float)) else timestamp
-            }
         else:  # Test format
             message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
             message_id = body.get('message_id', '')
-            timestamp = datetime.now().timestamp()
             message_metadata = {'from_agent': False}
 
         if not message or not wa_id:
@@ -85,37 +140,14 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Create a more robust deduplication key
-        if message_id:
-            # If we have a message_id, use it as the primary dedup key
-            dedup_key = f"{wa_id}:{message_id}"
-        else:
-            # Fallback to using normalized message + timestamp (rounded to nearest minute)
-            normalized_message = ' '.join(message.lower().split())
-            minute_timestamp = int(timestamp - (timestamp % 60))  # Round to nearest minute
-            dedup_key = f"{wa_id}:{normalized_message}:{minute_timestamp}"
-
-        logger.info(f"Using deduplication key: {dedup_key}")
-        
-        # Check if we've already processed this message
-        if dedup_key in processed_message_ids:
-            logger.info(f"Duplicate message detected with key={dedup_key}, skipping.")
+        # Check for duplicates using new system
+        if message_dedup.is_duplicate(wa_id, message, message_id):
+            logger.info(f"Duplicate message detected for wa_id={wa_id}, message_id={message_id}")
             return {
                 "success": True,
                 "info": "Duplicate message ignored"
             }
 
-        # Add to processed messages BEFORE processing
-        processed_message_ids.add(dedup_key)
-        
-        # Cleanup old messages (keep last 1000)
-        if len(processed_message_ids) > 1000:
-            temp_list = list(processed_message_ids)
-            processed_message_ids.clear()
-            processed_message_ids.update(temp_list[-1000:])
-
-        logger.info(f"Processing new message with dedup_key: {dedup_key}")
-        
         # Process the query
         response_text, _ = await support_system.process_query(
             query=message,
@@ -126,15 +158,15 @@ async def webhook(request: Request):
 
         # Only send response if we got one
         if response_text:
-            logger.info(f"Sending response for {dedup_key}")
+            logger.info(f"Sending response for wa_id={wa_id}")
             try:
                 await whatsapp_api.send_message(wa_id, response_text)
-                logger.info(f"Successfully sent response for {dedup_key}")
+                logger.info(f"Successfully sent response for wa_id={wa_id}")
             except Exception as e:
                 logger.error(f"Error sending WhatsApp message: {e}")
                 raise
         else:
-            logger.info(f"No response needed for {dedup_key} (likely human handling)")
+            logger.info(f"No response needed for wa_id={wa_id} (likely human handling)")
         
         return {
             "success": True,
@@ -144,45 +176,24 @@ async def webhook(request: Request):
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
-        logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
 
 @app.get("/debug/messages")
 async def get_debug_info():
     """Get information about processed messages"""
-    messages_list = list(processed_message_ids)
-    
-    # Parse the dedup keys to provide more readable information
-    parsed_messages = []
-    for msg in messages_list[-10:]:
-        parts = msg.split(':')
-        if len(parts) >= 3:
-            # Handle timestamp format
-            try:
-                timestamp = datetime.fromtimestamp(float(parts[-1])).isoformat()
-            except:
-                timestamp = parts[-1]
-            parsed_messages.append({
-                'wa_id': parts[0],
-                'message_or_id': parts[1],
-                'timestamp': timestamp
-            })
-        else:
-            parsed_messages.append({'raw_key': msg})
-
+    debug_info = message_dedup.get_debug_info()
     return {
-        "processed_messages_count": len(messages_list),
-        "last_10_messages_parsed": parsed_messages,
-        "last_10_messages_raw": messages_list[-10:] if messages_list else [],
-        "explanation": "Deduplication keys now include message_id or timestamp"
+        "processed_ids_count": debug_info["processed_ids_count"],
+        "recent_messages": debug_info["recent_messages"],
+        "explanation": "Using time-based deduplication with message IDs and content matching"
     }
 
 @app.post("/debug/clear-messages")
 async def clear_processed_messages():
-    """Clear the processed messages set"""
-    processed_message_ids.clear()
-    return {"success": True, "message": "Processed messages cleared"}
-
+    """Clear all deduplication data"""
+    message_dedup.processed_message_ids.clear()
+    message_dedup.recent_messages.clear()
+    return {"success": True, "message": "Deduplication data cleared"}
 
 @app.get("/health")
 async def health_check():
