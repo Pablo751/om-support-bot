@@ -45,7 +45,6 @@ async def startup_event():
 
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
-    """Handle incoming WhatsApp messages with improved deduplication."""
     try:
         body = await request.json()
         logger.info("=============== NEW WEBHOOK REQUEST ===============")
@@ -57,6 +56,9 @@ async def webhook(request: Request):
             message = data.get('message', '').strip()
             wa_id = data.get('wa_id', '')
             event = data.get('event')
+            # Extract message ID if available
+            message_id = data.get('message_id') or data.get('id')
+            timestamp = data.get('timestamp') or datetime.now().timestamp()
             
             # Skip non-message events
             if event and event != "Enviar mensaje":
@@ -65,15 +67,17 @@ async def webhook(request: Request):
                     "success": True,
                     "info": f"Skipped event type: {event}"
                 }
-                
+
             message_metadata = {
                 'from_agent': data.get('from_agent', False),
                 'agent_id': data.get('agent_id'),
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.fromtimestamp(timestamp).isoformat() if isinstance(timestamp, (int, float)) else timestamp
             }
         else:  # Test format
             message = body.get('message', '').strip()
             wa_id = body.get('wa_id', '')
+            message_id = body.get('message_id', '')
+            timestamp = datetime.now().timestamp()
             message_metadata = {'from_agent': False}
 
         if not message or not wa_id:
@@ -81,10 +85,15 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # Create a normalized deduplication key using wa_id and message content
-        # Remove extra spaces and make case-insensitive
-        normalized_message = ' '.join(message.lower().split())
-        dedup_key = f"{wa_id}:{normalized_message}"
+        # Create a more robust deduplication key
+        if message_id:
+            # If we have a message_id, use it as the primary dedup key
+            dedup_key = f"{wa_id}:{message_id}"
+        else:
+            # Fallback to using normalized message + timestamp (rounded to nearest minute)
+            normalized_message = ' '.join(message.lower().split())
+            minute_timestamp = int(timestamp - (timestamp % 60))  # Round to nearest minute
+            dedup_key = f"{wa_id}:{normalized_message}:{minute_timestamp}"
 
         logger.info(f"Using deduplication key: {dedup_key}")
         
@@ -142,10 +151,30 @@ async def webhook(request: Request):
 async def get_debug_info():
     """Get information about processed messages"""
     messages_list = list(processed_message_ids)
+    
+    # Parse the dedup keys to provide more readable information
+    parsed_messages = []
+    for msg in messages_list[-10:]:
+        parts = msg.split(':')
+        if len(parts) >= 3:
+            # Handle timestamp format
+            try:
+                timestamp = datetime.fromtimestamp(float(parts[-1])).isoformat()
+            except:
+                timestamp = parts[-1]
+            parsed_messages.append({
+                'wa_id': parts[0],
+                'message_or_id': parts[1],
+                'timestamp': timestamp
+            })
+        else:
+            parsed_messages.append({'raw_key': msg})
+
     return {
         "processed_messages_count": len(messages_list),
-        "last_10_messages": messages_list[-10:] if messages_list else [],
-        "explanation": "Deduplication keys are now in format: 'wa_id:wam_id' or 'wa_id:message'"
+        "last_10_messages_parsed": parsed_messages,
+        "last_10_messages_raw": messages_list[-10:] if messages_list else [],
+        "explanation": "Deduplication keys now include message_id or timestamp"
     }
 
 @app.post("/debug/clear-messages")
