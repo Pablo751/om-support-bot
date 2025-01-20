@@ -288,7 +288,7 @@ class EnhancedSupportSystem(SupportSystem):
             if not self._should_bot_respond(wa_id, message_metadata):
                 return None, None
     
-            # Handle basic greetings (preserve original logic)
+            # Handle basic greetings
             query_lower = query.lower().strip()
             if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
                 greetings = [
@@ -307,7 +307,7 @@ class EnhancedSupportSystem(SupportSystem):
                         knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                     knowledge_base_context = "\n\n".join(knowledge_entries)
     
-                # First, check if query needs human attention
+                # Check if query needs human attention with more specific criteria
                 confidence_prompt = f"""Analiza esta consulta y determina si requiere atención humana.
     
                 CONSULTA: {query}
@@ -315,14 +315,19 @@ class EnhancedSupportSystem(SupportSystem):
                 BASE DE CONOCIMIENTOS:
                 {knowledge_base_context}
     
-                Considera que una consulta necesita atención humana si:
-                1. Es un problema técnico complejo
-                2. Involucra problemas específicos de una cuenta
-                3. El usuario está claramente frustrado o enojado
-                4. Requiere acceso a sistemas no disponibles para el bot
-                5. Es sobre un tema sensible
-                6. El usuario pide explícitamente un agente humano
-                7. La consulta está fuera del alcance de la base de conocimientos
+                NO necesitan atención humana:
+                1. Consultas sobre estado de comercios
+                2. Saludos básicos
+                3. Preguntas simples que están en la base de conocimientos
+                4. Problemas técnicos básicos con soluciones documentadas
+    
+                SÍ necesitan atención humana cuando:
+                1. El usuario está claramente enojado o frustrado
+                2. Hay quejas sobre pérdidas monetarias
+                3. Problemas urgentes que afectan operaciones críticas
+                4. El usuario ha intentado las soluciones básicas sin éxito
+                5. El usuario solicita explícitamente hablar con un humano
+                6. Problemas no documentados en la base de conocimientos
     
                 RESPONDE SOLO CON JSON:
                 {{
@@ -330,11 +335,10 @@ class EnhancedSupportSystem(SupportSystem):
                     "reason": "explicación breve"
                 }}"""
     
-                # Removed await - using synchronous call
                 human_check = self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4-mini",
                     messages=[
-                        {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
+                        {"role": "system", "content": "Eres un asistente que analiza consultas de soporte técnico."},
                         {"role": "user", "content": confidence_prompt}
                     ],
                     temperature=0.1
@@ -343,13 +347,12 @@ class EnhancedSupportSystem(SupportSystem):
                 human_analysis = json.loads(human_check.choices[0].message.content.strip())
                 
                 if human_analysis.get("needs_human", False):
-                    # Update state and return handoff message
                     state = self._get_conversation_state(wa_id)
                     state.human_assigned = True
                     state.last_human_interaction = datetime.now()
                     return ("Para brindarte la mejor asistencia posible, transferiré tu consulta a un agente de soporte. En breve te atenderá un agente humano. 🤝", None)
     
-                # If bot can handle it, continue with classification
+                # If bot can handle it, continue with original classification
                 classification_prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
     
                 Analiza esta consulta de soporte y determina el tipo de consulta.
@@ -366,8 +369,6 @@ class EnhancedSupportSystem(SupportSystem):
                 2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
                 3. Si sí proporcionó ambos, usa "STORE_STATUS".
                 4. De lo contrario, "query_type": "GENERAL".
-                5. "response_text": tu respuesta final al usuario.
-                6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
     
                 USA ESTE FORMATO EXACTO:
                 {{
@@ -379,9 +380,8 @@ class EnhancedSupportSystem(SupportSystem):
                     "response_text": "texto de respuesta al usuario"
                 }}"""
     
-                # Removed await - using synchronous call
                 response = self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4-mini",
                     messages=[
                         {"role": "system", "content": "Eres un asistente que SOLO responde con JSON válido."},
                         {"role": "user", "content": classification_prompt}
@@ -428,6 +428,7 @@ class EnhancedSupportSystem(SupportSystem):
     
             except Exception as e:
                 logger.error(f"Error processing query: {e}", exc_info=True)
+                logger.error(f"Full error: {str(e)}")
                 return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
 
     def handle_human_response(self, wa_id: str):
