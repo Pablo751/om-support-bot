@@ -177,6 +177,16 @@ async def webhook(request: Request):
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
         return {"success": False, "error": f"Internal server error: {str(e)}"}
+
+@app.get("/")
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "ok",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
         
 @app.get("/debug/messages")
 async def get_debug_info():
