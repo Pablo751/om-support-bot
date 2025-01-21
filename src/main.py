@@ -26,38 +26,23 @@ async def startup_event():
     """Initialize components with knowledge bases"""
     global support_system, whatsapp_api, mongodb_service
     
-    try:
-        # Initialize MongoDB first
-        mongodb_service = MongoDBService()
-        # Test MongoDB connection
-        client = mongodb_service._get_async_client()
-        await client.admin.command('ping')
-        logger.info("MongoDB connection successful")
-        
-        # Get API key after MongoDB is confirmed working
-        api_key = os.getenv("WASAPI_API_KEY")
-        if not api_key:
-            raise ValueError("WASAPI_API_KEY not found in environment variables")
+    api_key = os.getenv("WASAPI_API_KEY")
+    if not api_key:
+        raise ValueError("WASAPI_API_KEY not found in environment variables")
 
-        # Initialize other services
-        whatsapp_api = WhatsAppAPI(api_key)
-        
-        # Check knowledge base files
-        if not os.path.exists("data/knowledge_base.csv"):
-            logger.warning("CSV knowledge_base.csv not found! The bot will fallback to minimal CSV data.")
-        if not os.path.exists("data/knowledge_base.json"):
-            logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
+    # (3) Check that the knowledge base files exist
+    if not os.path.exists("data/knowledge_base.csv"):
+        logger.warning("CSV knowledge_base.csv not found! The bot will fallback to minimal CSV data.")
+    if not os.path.exists("data/knowledge_base.json"):
+        logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
 
-        support_system = SupportSystem(
-            knowledge_base_csv='data/knowledge_base.csv',
-            knowledge_base_json='data/knowledge_base.json'
-        )
-        
-        logger.info("All services initialized successfully")
-        
-    except Exception as e:
-        logger.error(f"Startup failed: {e}")
-        raise e
+    # Initialize services
+    support_system = SupportSystem(
+        knowledge_base_csv='data/knowledge_base.csv',
+        knowledge_base_json='data/knowledge_base.json'
+    )
+    whatsapp_api = WhatsAppAPI(api_key)
+    mongodb_service = MongoDBService()
 
 
 @app.post("/webhook", response_model=MessageResponse)
@@ -99,30 +84,23 @@ async def webhook(request: Request):
         processed_message_ids.add(wam_id)
 
         logger.info(f"About to process query: {message} for wa_id: {wa_id}")
-        response_text, additional_info = await support_system.process_query(
-            query=message,
-            wa_id=wa_id,  # Pass the wa_id parameter
+        response_text, _ = await support_system.process_query(
+            message,
             user_name=None
         )
 
-        # Only send response if we got one (might be None if human is handling)
-        if response_text:
-            logger.info(f"Generated response: {response_text}")
-            logger.info(f"Attempting to send to wa_id: {wa_id}")
-            response = await whatsapp_api.send_message(wa_id, response_text)
-            logger.info(f"Wasapi send response: {response}")
-            
-            return {
-                "success": True,
-                "info": "Message processed successfully",
-                "response_text": response_text
-            }
-        else:
-            return {
-                "success": True,
-                "info": "Message handled by human agent",
-                "response_text": None
-            }
+        logger.info(f"Generated response: {response_text}")
+        logger.info(f"Attempting to send to wa_id: {wa_id}")
+        
+        # Send the response
+        response = await whatsapp_api.send_message(wa_id, response_text)
+        logger.info(f"Wasapi send response: {response}")
+        
+        return {
+            "success": True,
+            "info": "Message processed successfully",
+            "response_text": response_text
+        }
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
@@ -132,10 +110,11 @@ async def webhook(request: Request):
 
 @app.get("/health")
 async def health_check():
-    """Basic health check endpoint for Railway"""
+    """Health check endpoint"""
     return {
         "status": "ok",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
     }
 
 if __name__ == "__main__":
