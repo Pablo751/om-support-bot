@@ -117,11 +117,23 @@ async def webhook(request: Request):
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
+    """Simple health check endpoint"""
+    try:
+        # Basic MongoDB check
+        client = mongodb_service._get_async_client()
+        await client.admin.command('ping')
+        
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
     }
 
 if __name__ == "__main__":
