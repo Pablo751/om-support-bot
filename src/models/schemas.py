@@ -9,6 +9,14 @@ class MessageResponse(BaseModel):
     info: Optional[str] = None
     response_text: Optional[str] = None
 
+class AgentHandoverRequest(BaseModel):
+    wa_id: str
+    agent_id: str
+
+class HandoverResponse(BaseModel):
+    success: bool
+    message: str
+
 class WebhookRequest(BaseModel):
     message: str
     wa_id: str
