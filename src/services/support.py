@@ -12,19 +12,20 @@ from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
-class SupportSystem:
-    def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
-        """Initialize the support system with knowledge bases"""
-        self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
-        self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
-        self.openai_client = openai
-        self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
-        self.mongo_username = "juanpablo_casado"
-        self.mongo_password = self._get_env_variable('MONGO_PASSWORD')
-        self.mongo_client = None
-        # Initialize conversation manager
-        from src.services.conversation_state import ConversationManager
-        self.conversation_manager = ConversationManager(self._get_mongo_client())
+def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
+    """Initialize the support system with knowledge bases"""
+    self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
+    self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
+    self.openai_client = openai
+    self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
+    
+    # Initialize MongoDB service
+    from src.services.mongodb import MongoDBService
+    self.mongodb_service = MongoDBService()
+    
+    # Initialize conversation manager with MongoDB service
+    from src.services.conversation_state import ConversationManager
+    self.conversation_manager = ConversationManager(self.mongodb_service)
 
     def _get_env_variable(self, var_name: str) -> str:
         """Safely get environment variable"""
@@ -111,11 +112,11 @@ class SupportSystem:
         """Process incoming queries with human handover capability"""
         logger.info(f"Processing query for wa_id {wa_id}: {query}")
         
-        # NEW: Check if conversation is already handled by human
+        # Check current conversation state
         conversation_state = await self.conversation_manager.get_conversation_state(wa_id)
         if conversation_state['state'] != 'bot':
             logger.info(f"Conversation {wa_id} is handled by human/pending, skipping bot processing")
-            return None, None  # Bot should not respond
+        return None, None
         
         # Handle basic greetings (keeping existing logic)
         query_lower = query.lower().strip()
