@@ -12,20 +12,16 @@ from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
-def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
-    """Initialize the support system with knowledge bases"""
-    self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
-    self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
-    self.openai_client = openai
-    self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
-    
-    # Initialize MongoDB service
-    from src.services.mongodb import MongoDBService
-    self.mongodb_service = MongoDBService()
-    
-    # Initialize conversation manager with MongoDB service
-    from src.services.conversation_state import ConversationManager
-    self.conversation_manager = ConversationManager(self.mongodb_service)
+class SupportSystem:
+    def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
+        """Initialize the support system with knowledge bases"""
+        self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
+        self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
+        self.openai_client = openai
+        self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
+        self.mongo_username = "juanpablo_casado"
+        self.mongo_password = self._get_env_variable('MONGO_PASSWORD')
+        self.mongo_client = None
 
     def _get_env_variable(self, var_name: str) -> str:
         """Safely get environment variable"""
@@ -108,17 +104,11 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
             logger.error(f"MongoDB error: {str(e)}")
             return None
 
-    async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-        """Process incoming queries with human handover capability"""
-        logger.info(f"Processing query for wa_id {wa_id}: {query}")
-        
-        # Check current conversation state
-        conversation_state = await self.conversation_manager.get_conversation_state(wa_id)
-        if conversation_state['state'] != 'bot':
-            logger.info(f"Conversation {wa_id} is handled by human/pending, skipping bot processing")
-        return None, None
-        
-        # Handle basic greetings (keeping existing logic)
+    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
+        """Process incoming queries using GPT for the entire flow."""
+        logger.info(f"Processing query: {query}")
+    
+        # Handle basic greetings
         query_lower = query.lower().strip()
         if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
             greetings = [
@@ -126,10 +116,10 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                 f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
                 f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
             ]
-            return random.choice(greetings), None
+            return (random.choice(greetings), None)
     
         try:
-            # Prepare knowledge base context (keeping existing logic)
+            # Prepare knowledge base context
             knowledge_base_context = ""
             if not self.primary_knowledge_base.empty:
                 knowledge_entries = []
@@ -137,7 +127,6 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                     knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                 knowledge_base_context = "\n\n".join(knowledge_entries)
     
-            # NEW: Modified prompt to include confidence scoring
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
     
     Analiza esta consulta de soporte y determina el tipo de consulta.
@@ -156,7 +145,6 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
     4. De lo contrario, "query_type": "GENERAL".
     5. "response_text": tu respuesta final al usuario.
     6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
-    7. "confidence": un número entre 0 y 1 que indica qué tan seguro estás de tu respuesta.
     
     USA ESTE FORMATO EXACTO:
     {{
@@ -165,13 +153,12 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
             "company_name": "nombre_empresa o null",
             "store_id": "id_comercio o null"
         }},
-        "response_text": "texto de respuesta al usuario",
-        "confidence": 0.95
+        "response_text": "texto de respuesta al usuario"
     }}"""
     
             logger.info("Sending request to OpenAI")
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",  # Updated to newer model
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system", 
@@ -195,20 +182,8 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                 analysis = json.loads(content)
                 logger.info(f"Parsed GPT Analysis: {analysis}")
     
-                # NEW: Check confidence score
-                confidence = analysis.get('confidence', 0)
-                if confidence < 0.7:  # Confidence threshold
-                    await self.conversation_manager.request_human_handover(
-                        wa_id,
-                        f"Low confidence response: {confidence}"
-                    )
-                    return (
-                        "Para asegurarme de darte la mejor ayuda posible, voy a conectarte con un agente humano. "
-                        "En breve se pondrán en contacto contigo. Gracias por tu paciencia. 🙂",
-                        None
-                    )
-    
                 query_type = analysis.get("query_type", "GENERAL")
+                # Safely extract store_info only if it's a dict
                 store_info = analysis.get("store_info", None)
                 if not isinstance(store_info, dict):
                     store_info = {}
@@ -217,7 +192,7 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                 store_id = store_info.get("store_id")
                 response_text = analysis.get("response_text", "")
     
-                # Handle STORE_STATUS (keeping existing logic)
+                # -------------------- HANDLE "STORE_STATUS" --------------------
                 if query_type == "STORE_STATUS":
                     store_status = self._check_store_status(company_name, store_id)
                     if store_status is None:
@@ -236,7 +211,7 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                             None
                         )
     
-                # Handle STORE_STATUS_MISSING (keeping existing logic)
+                # -------------------- HANDLE "STORE_STATUS_MISSING" --------------------
                 elif query_type == "STORE_STATUS_MISSING":
                     return (
                         "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
@@ -246,56 +221,20 @@ def __init__(self, knowledge_base_csv: str, knowledge_base_json: str = None):
                         ["company_name", "store_id"]
                     )
     
-                # Handle GENERAL with uncertainty check
+                # -------------------- HANDLE "GENERAL" --------------------
                 else:
-                    # NEW: Check for uncertainty in the response
-                    uncertainty_phrases = [
-                        "no estoy seguro",
-                        "no tengo suficiente información",
-                        "necesito más detalles",
-                        "no puedo confirmar",
-                        "no tengo claridad"
-                    ]
-                    
-                    if any(phrase in response_text.lower() for phrase in uncertainty_phrases):
-                        await self.conversation_manager.request_human_handover(
-                            wa_id,
-                            "Bot expressed uncertainty in response"
-                        )
-                        return (
-                            "Para asegurarme de darte la mejor ayuda posible, voy a conectarte con un agente humano. "
-                            "En breve se pondrán en contacto contigo. Gracias por tu paciencia. 🙂",
-                            None
-                        )
-                    
+                    # Just return GPT's response as a general answer
                     return (response_text, None)
     
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parsing error with content: {content}")
                 logger.error(f"Error details: {str(e)}")
-                # NEW: Trigger handover on JSON parsing error
-                await self.conversation_manager.request_human_handover(
-                    wa_id,
-                    f"JSON parsing error: {str(e)}"
-                )
-                return (
-                    "Lo siento, estoy teniendo dificultades técnicas. Te conectaré con un agente humano que podrá ayudarte mejor. "
-                    "En breve se pondrán en contacto contigo. 🙂",
-                    None
-                )
+                return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
     
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
-            # NEW: Trigger handover on any error
-            await self.conversation_manager.request_human_handover(
-                wa_id,
-                f"Error processing query: {str(e)}"
-            )
-            return (
-                "Lo siento, estoy experimentando dificultades técnicas. Te conectaré con un agente humano que podrá ayudarte mejor. "
-                "En breve se pondrán en contacto contigo. 🙂",
-                None
-            )
+            return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
+
 
     def __del__(self):
         """Cleanup MongoDB connection"""
