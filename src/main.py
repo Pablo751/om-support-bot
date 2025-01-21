@@ -26,23 +26,38 @@ async def startup_event():
     """Initialize components with knowledge bases"""
     global support_system, whatsapp_api, mongodb_service
     
-    api_key = os.getenv("WASAPI_API_KEY")
-    if not api_key:
-        raise ValueError("WASAPI_API_KEY not found in environment variables")
+    try:
+        # Initialize MongoDB first
+        mongodb_service = MongoDBService()
+        # Test MongoDB connection
+        client = mongodb_service._get_async_client()
+        await client.admin.command('ping')
+        logger.info("MongoDB connection successful")
+        
+        # Get API key after MongoDB is confirmed working
+        api_key = os.getenv("WASAPI_API_KEY")
+        if not api_key:
+            raise ValueError("WASAPI_API_KEY not found in environment variables")
 
-    # (3) Check that the knowledge base files exist
-    if not os.path.exists("data/knowledge_base.csv"):
-        logger.warning("CSV knowledge_base.csv not found! The bot will fallback to minimal CSV data.")
-    if not os.path.exists("data/knowledge_base.json"):
-        logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
+        # Initialize other services
+        whatsapp_api = WhatsAppAPI(api_key)
+        
+        # Check knowledge base files
+        if not os.path.exists("data/knowledge_base.csv"):
+            logger.warning("CSV knowledge_base.csv not found! The bot will fallback to minimal CSV data.")
+        if not os.path.exists("data/knowledge_base.json"):
+            logger.warning("JSON knowledge_base.json not found! The bot may fallback to minimal JSON data.")
 
-    # Initialize services
-    support_system = SupportSystem(
-        knowledge_base_csv='data/knowledge_base.csv',
-        knowledge_base_json='data/knowledge_base.json'
-    )
-    whatsapp_api = WhatsAppAPI(api_key)
-    mongodb_service = MongoDBService()
+        support_system = SupportSystem(
+            knowledge_base_csv='data/knowledge_base.csv',
+            knowledge_base_json='data/knowledge_base.json'
+        )
+        
+        logger.info("All services initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"Startup failed: {e}")
+        raise e
 
 
 @app.post("/webhook", response_model=MessageResponse)
@@ -119,6 +134,14 @@ async def webhook(request: Request):
 async def health_check():
     """Simple health check endpoint"""
     try:
+        # Check if MongoDB service is initialized
+        if mongodb_service is None:
+            return {
+                "status": "error",
+                "error": "MongoDB service not initialized",
+                "timestamp": datetime.now().isoformat()
+            }
+            
         # Basic MongoDB check
         client = mongodb_service._get_async_client()
         await client.admin.command('ping')
@@ -127,6 +150,7 @@ async def health_check():
             "status": "ok",
             "timestamp": datetime.now().isoformat()
         }
+        
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return {
@@ -134,7 +158,6 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
-    }
 
 if __name__ == "__main__":
     import uvicorn
