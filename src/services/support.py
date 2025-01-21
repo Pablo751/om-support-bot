@@ -170,7 +170,7 @@ class SupportSystem:
     
             logger.info("Sending request to OpenAI")
             response = await self.openai_client.chat.completions.create(
-                model="gpt-4-turbo-preview",  # Updated to newer model
+                model="gpt-4o-mini",  # Updated to newer model
                 messages=[
                     {
                         "role": "system", 
