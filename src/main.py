@@ -1,9 +1,12 @@
 import os
 import logging
 from datetime import datetime
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
-
+from fastapi.security import APIKeyHeader
+from src.services.conversation import ConversationHandler, ConversationState
+from typing import Optional
+from pydantic import BaseModel
 from src.models.schemas import MessageResponse
 from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
