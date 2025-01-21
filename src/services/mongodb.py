@@ -4,13 +4,16 @@ import logging
 import certifi
 from typing import Optional
 from pymongo import MongoClient
-logger = logging.getLogger(name)
+
+logger = logging.getLogger(__name__)
+
 class MongoDBService:
-    def init(self):
+    def __init__(self):
         self.username = os.getenv('MONGO_USERNAME', 'juanpablo_casado')
         self.password = os.getenv('MONGO_PASSWORD')
         self.client = None
-    def getclient(self) -> Optional[MongoClient]:
+
+    def _get_client(self) -> Optional[MongoClient]:
         """Get MongoDB client with connection pooling"""
         if self.client is None:
             try:
@@ -28,31 +31,33 @@ class MongoDBService:
                 self.client = None
                 raise
         return self.client
+
     def check_store_status(self, company_name: str, store_id: str) -> Optional[bool]:
         """Check store status in MongoDB"""
         filter_json = {
             "domain": f"{company_name}.youorder.me",
             "contact.externalId": store_id
         }
-
+        
         try:
             client = self._get_client()
             if not client:
                 return None
-
+                
             db = client['yom-production']
             collection = db['commerces']
-
+            
             store = collection.find_one(filter_json)
             logger.info(f"MongoDB search result for {filter_json}: {store}")
-
+            
             if store:
                 return store.get('active', False)
             return None
-
+            
         except Exception as e:
             logger.error(f"MongoDB error: {str(e)}")
             return None
+
     def close(self):
         """Close MongoDB connection"""
         if self.client:
