@@ -22,6 +22,9 @@ class SupportSystem:
         self.mongo_username = "juanpablo_casado"
         self.mongo_password = self._get_env_variable('MONGO_PASSWORD')
         self.mongo_client = None
+        # Initialize conversation manager
+        from src.services.conversation_state import ConversationManager
+        self.conversation_manager = ConversationManager(self._get_mongo_client())
 
     def _get_env_variable(self, var_name: str) -> str:
         """Safely get environment variable"""
@@ -104,11 +107,17 @@ class SupportSystem:
             logger.error(f"MongoDB error: {str(e)}")
             return None
 
-    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-        """Process incoming queries using GPT for the entire flow."""
-        logger.info(f"Processing query: {query}")
-    
-        # Handle basic greetings
+    async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
+        """Process incoming queries with human handover capability"""
+        logger.info(f"Processing query for wa_id {wa_id}: {query}")
+        
+        # NEW: Check if conversation is already handled by human
+        conversation_state = await self.conversation_manager.get_conversation_state(wa_id)
+        if conversation_state['state'] != 'bot':
+            logger.info(f"Conversation {wa_id} is handled by human/pending, skipping bot processing")
+            return None, None  # Bot should not respond
+        
+        # Handle basic greetings (keeping existing logic)
         query_lower = query.lower().strip()
         if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
             greetings = [
@@ -116,10 +125,10 @@ class SupportSystem:
                 f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
                 f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
             ]
-            return (random.choice(greetings), None)
+            return random.choice(greetings), None
     
         try:
-            # Prepare knowledge base context
+            # Prepare knowledge base context (keeping existing logic)
             knowledge_base_context = ""
             if not self.primary_knowledge_base.empty:
                 knowledge_entries = []
@@ -127,6 +136,7 @@ class SupportSystem:
                     knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                 knowledge_base_context = "\n\n".join(knowledge_entries)
     
+            # NEW: Modified prompt to include confidence scoring
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
     
     Analiza esta consulta de soporte y determina el tipo de consulta.
@@ -145,6 +155,7 @@ class SupportSystem:
     4. De lo contrario, "query_type": "GENERAL".
     5. "response_text": tu respuesta final al usuario.
     6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
+    7. "confidence": un número entre 0 y 1 que indica qué tan seguro estás de tu respuesta.
     
     USA ESTE FORMATO EXACTO:
     {{
@@ -153,12 +164,13 @@ class SupportSystem:
             "company_name": "nombre_empresa o null",
             "store_id": "id_comercio o null"
         }},
-        "response_text": "texto de respuesta al usuario"
+        "response_text": "texto de respuesta al usuario",
+        "confidence": 0.95
     }}"""
     
             logger.info("Sending request to OpenAI")
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+            response = await self.openai_client.chat.completions.create(
+                model="gpt-4-turbo-preview",  # Updated to newer model
                 messages=[
                     {
                         "role": "system", 
@@ -182,8 +194,20 @@ class SupportSystem:
                 analysis = json.loads(content)
                 logger.info(f"Parsed GPT Analysis: {analysis}")
     
+                # NEW: Check confidence score
+                confidence = analysis.get('confidence', 0)
+                if confidence < 0.7:  # Confidence threshold
+                    await self.conversation_manager.request_human_handover(
+                        wa_id,
+                        f"Low confidence response: {confidence}"
+                    )
+                    return (
+                        "Para asegurarme de darte la mejor ayuda posible, voy a conectarte con un agente humano. "
+                        "En breve se pondrán en contacto contigo. Gracias por tu paciencia. 🙂",
+                        None
+                    )
+    
                 query_type = analysis.get("query_type", "GENERAL")
-                # Safely extract store_info only if it's a dict
                 store_info = analysis.get("store_info", None)
                 if not isinstance(store_info, dict):
                     store_info = {}
@@ -192,7 +216,7 @@ class SupportSystem:
                 store_id = store_info.get("store_id")
                 response_text = analysis.get("response_text", "")
     
-                # -------------------- HANDLE "STORE_STATUS" --------------------
+                # Handle STORE_STATUS (keeping existing logic)
                 if query_type == "STORE_STATUS":
                     store_status = self._check_store_status(company_name, store_id)
                     if store_status is None:
@@ -211,7 +235,7 @@ class SupportSystem:
                             None
                         )
     
-                # -------------------- HANDLE "STORE_STATUS_MISSING" --------------------
+                # Handle STORE_STATUS_MISSING (keeping existing logic)
                 elif query_type == "STORE_STATUS_MISSING":
                     return (
                         "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
@@ -221,20 +245,56 @@ class SupportSystem:
                         ["company_name", "store_id"]
                     )
     
-                # -------------------- HANDLE "GENERAL" --------------------
+                # Handle GENERAL with uncertainty check
                 else:
-                    # Just return GPT's response as a general answer
+                    # NEW: Check for uncertainty in the response
+                    uncertainty_phrases = [
+                        "no estoy seguro",
+                        "no tengo suficiente información",
+                        "necesito más detalles",
+                        "no puedo confirmar",
+                        "no tengo claridad"
+                    ]
+                    
+                    if any(phrase in response_text.lower() for phrase in uncertainty_phrases):
+                        await self.conversation_manager.request_human_handover(
+                            wa_id,
+                            "Bot expressed uncertainty in response"
+                        )
+                        return (
+                            "Para asegurarme de darte la mejor ayuda posible, voy a conectarte con un agente humano. "
+                            "En breve se pondrán en contacto contigo. Gracias por tu paciencia. 🙂",
+                            None
+                        )
+                    
                     return (response_text, None)
     
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parsing error with content: {content}")
                 logger.error(f"Error details: {str(e)}")
-                return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
+                # NEW: Trigger handover on JSON parsing error
+                await self.conversation_manager.request_human_handover(
+                    wa_id,
+                    f"JSON parsing error: {str(e)}"
+                )
+                return (
+                    "Lo siento, estoy teniendo dificultades técnicas. Te conectaré con un agente humano que podrá ayudarte mejor. "
+                    "En breve se pondrán en contacto contigo. 🙂",
+                    None
+                )
     
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
-            return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
-
+            # NEW: Trigger handover on any error
+            await self.conversation_manager.request_human_handover(
+                wa_id,
+                f"Error processing query: {str(e)}"
+            )
+            return (
+                "Lo siento, estoy experimentando dificultades técnicas. Te conectaré con un agente humano que podrá ayudarte mejor. "
+                "En breve se pondrán en contacto contigo. 🙂",
+                None
+            )
 
     def __del__(self):
         """Cleanup MongoDB connection"""
