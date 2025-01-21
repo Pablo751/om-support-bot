@@ -84,23 +84,30 @@ async def webhook(request: Request):
         processed_message_ids.add(wam_id)
 
         logger.info(f"About to process query: {message} for wa_id: {wa_id}")
-        response_text, _ = await support_system.process_query(
-            message,
+        response_text, additional_info = await support_system.process_query(
+            query=message,
+            wa_id=wa_id,  # Pass the wa_id parameter
             user_name=None
         )
 
-        logger.info(f"Generated response: {response_text}")
-        logger.info(f"Attempting to send to wa_id: {wa_id}")
-        
-        # Send the response
-        response = await whatsapp_api.send_message(wa_id, response_text)
-        logger.info(f"Wasapi send response: {response}")
-        
-        return {
-            "success": True,
-            "info": "Message processed successfully",
-            "response_text": response_text
-        }
+        # Only send response if we got one (might be None if human is handling)
+        if response_text:
+            logger.info(f"Generated response: {response_text}")
+            logger.info(f"Attempting to send to wa_id: {wa_id}")
+            response = await whatsapp_api.send_message(wa_id, response_text)
+            logger.info(f"Wasapi send response: {response}")
+            
+            return {
+                "success": True,
+                "info": "Message processed successfully",
+                "response_text": response_text
+            }
+        else:
+            return {
+                "success": True,
+                "info": "Message handled by human agent",
+                "response_text": None
+            }
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
