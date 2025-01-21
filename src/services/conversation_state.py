@@ -11,6 +11,9 @@ class ConversationState(Enum):
     HUMAN = "human"
     PENDING_HANDOVER = "pending_handover"
 
+# Confidence threshold for bot responses
+MIN_CONFIDENCE_THRESHOLD = 0.7
+
 class ConversationManager:
     def __init__(self, mongodb_service):
         self.mongodb = mongodb_service
