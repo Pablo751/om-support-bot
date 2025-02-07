@@ -106,31 +106,31 @@ class SupportSystem:
             return None
 
     async def _create_support_ticket(self, wa_id: str, query: str) -> Dict:
-    """Create a new support ticket in MongoDB queries collection"""
-    client = self._get_mongo_client()
-    db = client['yom-production']
-    collection = db['queries']  # Updated collection name
-    
-    now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 format
-    
-    ticket = {
-        'wa_id': wa_id,
-        'status': 'pending',
-        'query': query,
-        'created_at': now,
-        'assigned_to': None,
-        'assigned_at': None,
-        'resolved_at': None,
-        'messages': [{
-            'timestamp': now,
-            'content': query,
-            'sender': 'customer',
-            'message_id': f"msg_{ObjectId()}"  # Generate unique message ID
-        }]
-    }
-    
-    result = collection.insert_one(ticket)
-    return collection.find_one({'_id': result.inserted_id})
+        """Create a new support ticket in MongoDB queries collection"""
+        client = self._get_mongo_client()
+        db = client['yom-production']
+        collection = db['queries']  # Updated collection name
+        
+        now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 format
+        
+        ticket = {
+            'wa_id': wa_id,
+            'status': 'pending',
+            'query': query,
+            'created_at': now,
+            'assigned_to': None,
+            'assigned_at': None,
+            'resolved_at': None,
+            'messages': [{
+                'timestamp': now,
+                'content': query,
+                'sender': 'customer',
+                'message_id': f"msg_{ObjectId()}"  # Generate unique message ID
+            }]
+        }
+        
+        result = collection.insert_one(ticket)
+        return collection.find_one({'_id': result.inserted_id})
 
     async def handle_agent_response(self, ticket_id: str, response: str, agent_id: str) -> bool:
         """Handle agent response to a ticket"""
