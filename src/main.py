@@ -134,6 +134,12 @@ async def webhook(request: Request):
         # Send response
         await whatsapp_api.send_message(wa_id, response_text)
         
+        if needs_handoff:
+            await whatsapp_api.send_message(
+                wa_id,
+                "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad."
+            )
+        
         return {
             "success": True,
             "info": "Message processed successfully",
