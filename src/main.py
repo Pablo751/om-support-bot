@@ -131,10 +131,11 @@ async def webhook(request: Request):
             user_name=None
         )
         
-        # Send response
-        await whatsapp_api.send_message(wa_id, response_text)
-        
-        if needs_handoff:
+        # Send response only if it's not a handoff
+        if not needs_handoff:
+            await whatsapp_api.send_message(wa_id, response_text)
+        else:
+            # For handoff, send only one message
             await whatsapp_api.send_message(
                 wa_id,
                 "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad."
