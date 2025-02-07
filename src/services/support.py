@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import certifi
+from bson.objectid import ObjectId
 from typing import Dict, Optional, List, Tuple
 from datetime import datetime
 import pandas as pd
@@ -104,10 +105,81 @@ class SupportSystem:
             logger.error(f"MongoDB error: {str(e)}")
             return None
 
-    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, Optional[List[str]]]:
-        """Process incoming queries using GPT for the entire flow."""
-        logger.info(f"Processing query: {query}")
+    async def _create_support_ticket(self, wa_id: str, query: str) -> Dict:
+    """Create a new support ticket in MongoDB queries collection"""
+    client = self._get_mongo_client()
+    db = client['yom-production']
+    collection = db['queries']  # Updated collection name
     
+    now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")  # ISO 8601 format
+    
+    ticket = {
+        'wa_id': wa_id,
+        'status': 'pending',
+        'query': query,
+        'created_at': now,
+        'assigned_to': None,
+        'assigned_at': None,
+        'resolved_at': None,
+        'messages': [{
+            'timestamp': now,
+            'content': query,
+            'sender': 'customer',
+            'message_id': f"msg_{ObjectId()}"  # Generate unique message ID
+        }]
+    }
+    
+    result = collection.insert_one(ticket)
+    return collection.find_one({'_id': result.inserted_id})
+
+    async def handle_agent_response(self, ticket_id: str, response: str, agent_id: str) -> bool:
+        """Handle agent response to a ticket"""
+        client = self._get_mongo_client()
+        db = client['yom-production']
+        collection = db['queries']  # Updated collection name
+        
+        now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # Update ticket with agent's response
+        result = collection.update_one(
+            {'_id': ObjectId(ticket_id)},  # Convert string ID to ObjectId
+            {
+                '$set': {
+                    'status': 'resolved',
+                    'resolved_at': now,
+                    'assigned_to': agent_id
+                },
+                '$push': {
+                    'messages': {
+                        'timestamp': now,
+                        'content': response,
+                        'sender': 'agent',
+                        'message_id': f"msg_{ObjectId()}"
+                    }
+                }
+            }
+        )
+        
+        return result.modified_count > 0
+    
+    async def get_ticket_history(self, wa_id: str) -> List[Dict]:
+        """Get conversation history for a specific WhatsApp ID"""
+        client = self._get_mongo_client()
+        db = client['yom-production']
+        collection = db['queries']
+        
+        # Find all tickets for this wa_id, sorted by created_at
+        tickets = list(collection.find(
+            {'wa_id': wa_id},
+            {'messages': 1, 'status': 1, 'created_at': 1}
+        ).sort('created_at', -1))
+        
+        return tickets
+
+    async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
+        """Process incoming queries using GPT and determine if human handoff is needed."""
+        logger.info(f"Processing query: {query}")
+        
         # Handle basic greetings
         query_lower = query.lower().strip()
         if query_lower in ['hola', 'hello', 'hi', 'buenos dias', 'buenas tardes', 'buenas noches']:
@@ -116,8 +188,8 @@ class SupportSystem:
                 f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
                 f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
             ]
-            return (random.choice(greetings), None)
-    
+            return (random.choice(greetings), False)
+        
         try:
             # Prepare knowledge base context
             knowledge_base_context = ""
@@ -126,39 +198,43 @@ class SupportSystem:
                 for _, row in self.primary_knowledge_base.iterrows():
                     knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
                 knowledge_base_context = "\n\n".join(knowledge_entries)
-    
+        
+            # Your existing GPT prompt
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
-    
-    Analiza esta consulta de soporte y determina el tipo de consulta.
-    
-    CONSULTA: {query}
-    
-    BASE DE CONOCIMIENTOS:
-    {knowledge_base_context}
-    
-    INSTRUCCIONES:
-    1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
-       - Un ID de comercio (STORE_ID) que sea numérico.
-       - Un NOMBRE de la empresa (COMPANY_NAME).
-    2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
-    3. Si sí proporcionó ambos, usa "STORE_STATUS".
-    4. De lo contrario, "query_type": "GENERAL".
-    5. "response_text": tu respuesta final al usuario.
-    6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.
-    
-    USA ESTE FORMATO EXACTO:
-    {{
-        "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"
-        "store_info": {{
-            "company_name": "nombre_empresa o null",
-            "store_id": "id_comercio o null"
-        }},
-        "response_text": "texto de respuesta al usuario"
-    }}"""
-    
+        
+            Analiza esta consulta de soporte y determina el tipo de consulta.
+            
+            CONSULTA: {query}
+            
+            BASE DE CONOCIMIENTOS:
+            {knowledge_base_context}
+            
+            INSTRUCCIONES:
+            1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:
+               - Un ID de comercio (STORE_ID) que sea numérico.
+               - Un NOMBRE de la empresa (COMPANY_NAME).
+            2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".
+            3. Si sí proporcionó ambos, usa "STORE_STATUS".
+            4. De lo contrario, "query_type": "GENERAL".
+            5. Añade un campo "needs_human": true/false basado en si la consulta requiere atención humana.
+            6. Añade un campo "confidence": 0.0-1.0 indicando tu confianza en la respuesta.
+            7. "response_text": tu respuesta final al usuario.
+            
+            USA ESTE FORMATO EXACTO:
+            {{
+                "query_type": "STORE_STATUS/STORE_STATUS_MISSING/GENERAL",
+                "store_info": {{
+                    "company_name": "nombre_empresa o null",
+                    "store_id": "id_comercio o null"
+                }},
+                "needs_human": true/false,
+                "confidence": 0.0-1.0,
+                "response_text": "texto de respuesta al usuario"
+            }}"""
+        
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4-0125-preview",
                 messages=[
                     {
                         "role": "system", 
@@ -171,70 +247,66 @@ class SupportSystem:
                 ],
                 temperature=0.1
             )
-    
+        
             # Extract and clean the content
             content = response.choices[0].message.content.strip()
             content = content.replace('```json', '').replace('```', '').strip()
             logger.info(f"OpenAI response content: {content}")
-    
+        
             try:
                 # Parse the JSON response
                 analysis = json.loads(content)
                 logger.info(f"Parsed GPT Analysis: {analysis}")
-    
+        
                 query_type = analysis.get("query_type", "GENERAL")
-                # Safely extract store_info only if it's a dict
-                store_info = analysis.get("store_info", None)
-                if not isinstance(store_info, dict):
-                    store_info = {}
-    
-                company_name = store_info.get("company_name")
-                store_id = store_info.get("store_id")
+                needs_human = analysis.get("needs_human", True)  # Default to human if unsure
+                confidence = analysis.get("confidence", 0)
                 response_text = analysis.get("response_text", "")
-    
-                # -------------------- HANDLE "STORE_STATUS" --------------------
+                
+                # Handle different query types
                 if query_type == "STORE_STATUS":
-                    store_status = self._check_store_status(company_name, store_id)
-                    if store_status is None:
-                        return (
-                            "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
-                            None
-                        )
-                    elif store_status:
-                        return (
-                            f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.",
-                            None
-                        )
-                    else:
-                        return (
-                            f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
-                            None
-                        )
-    
-                # -------------------- HANDLE "STORE_STATUS_MISSING" --------------------
-                elif query_type == "STORE_STATUS_MISSING":
+                    store_info = analysis.get("store_info", {})
+                    company_name = store_info.get("company_name")
+                    store_id = store_info.get("store_id")
+                    
+                    if company_name and store_id:
+                        store_status = self._check_store_status(company_name, store_id)
+                        if store_status is None:
+                            return (
+                                "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
+                                True  # Handoff to human
+                            )
+                        elif store_status:
+                            return (
+                                f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.",
+                                False
+                            )
+                        else:
+                            return (
+                                f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
+                                False
+                            )
+                
+                # If confidence is low or GPT suggests human handoff
+                if needs_human or confidence < 0.7:
+                    # Create support ticket
+                    ticket = await self._create_support_ticket(wa_id, query)
                     return (
-                        "Para poder verificar el estado del comercio necesito dos datos importantes:\n\n"
-                        "1️⃣ El ID del comercio (por ejemplo: 100005336)\n"
-                        "2️⃣ El nombre de la empresa (por ejemplo: soprole)\n\n"
-                        "¿Podrías proporcionarme esta información? 🤔",
-                        ["company_name", "store_id"]
+                        "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad. "
+                        f"Tu número de ticket es: {ticket['_id']}",
+                        True
                     )
-    
-                # -------------------- HANDLE "GENERAL" --------------------
-                else:
-                    # Just return GPT's response as a general answer
-                    return (response_text, None)
-    
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON parsing error with content: {content}")
-                logger.error(f"Error details: {str(e)}")
-                return ("Lo siento, hubo un error técnico. ¿Podrías intentar reformular tu pregunta?", None)
-    
+                
+                # Return GPT's response if confident enough
+                return (response_text, False)
+                    
+            except json.JSONDecodeError:
+                logger.error("Error parsing GPT response")
+                return ("Lo siento, estoy teniendo problemas técnicos. Un agente te ayudará pronto.", True)
+                
         except Exception as e:
             logger.error(f"Error processing query: {e}", exc_info=True)
-            return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
-
+            return ("Lo siento, estoy experimentando dificultades técnicas. Un agente te contactará pronto.", True)
 
     def __del__(self):
         """Cleanup MongoDB connection"""
