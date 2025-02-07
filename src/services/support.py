@@ -176,7 +176,7 @@ class SupportSystem:
         
         return tickets
 
-    async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
+    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
         """Process incoming queries using GPT and determine if human handoff is needed."""
         logger.info(f"Processing query: {query}")
         
@@ -234,7 +234,7 @@ class SupportSystem:
         
             logger.info("Sending request to OpenAI")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4-0125-preview",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system", 
@@ -289,11 +289,8 @@ class SupportSystem:
                 
                 # If confidence is low or GPT suggests human handoff
                 if needs_human or confidence < 0.7:
-                    # Create support ticket
-                    ticket = await self._create_support_ticket(wa_id, query)
                     return (
-                        "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad. "
-                        f"Tu número de ticket es: {ticket['_id']}",
+                        "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad.",
                         True
                     )
                 
