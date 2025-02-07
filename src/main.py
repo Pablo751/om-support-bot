@@ -55,12 +55,14 @@ async def _check_active_ticket(wa_id: str) -> bool:
     collection = db['queries']
     
     # Look for any unresolved tickets (status pending or assigned)
+    # AND make sure it's not marked as resolved
     ticket = collection.find_one({
         'wa_id': wa_id,
         'status': {'$in': ['pending', 'assigned']},
-        'resolved_at': None
+        'resolved_at': None,  # Make sure it's not resolved
     })
     
+    logger.info(f"Checking active ticket for {wa_id}: {'Found' if ticket else 'Not found'}")
     return ticket is not None
 
 
@@ -92,6 +94,8 @@ async def webhook(request: Request):
 
         # Check if there's an active ticket
         has_active_ticket = await _check_active_ticket(wa_id)
+        logger.info(f"Active ticket check for {wa_id}: {has_active_ticket}")
+        
         if has_active_ticket:
             # Just store the message in the ticket and don't respond
             logger.info(f"Active ticket found for {wa_id}, storing message only")
@@ -120,15 +124,12 @@ async def webhook(request: Request):
             }
 
         # If no active ticket, process normally
-        logger.info(f"About to process query: {message} for wa_id: {wa_id}")
+        logger.info(f"No active ticket, processing query: {message} for wa_id: {wa_id}")
         response_text, needs_handoff = await support_system.process_query(
             message,
             wa_id=wa_id,
             user_name=None
         )
-        
-        logger.info(f"Generated response: {response_text}")
-        logger.info(f"Handoff needed: {needs_handoff}")
         
         # Send response
         await whatsapp_api.send_message(wa_id, response_text)
