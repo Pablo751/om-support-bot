@@ -176,7 +176,7 @@ class SupportSystem:
         
         return tickets
 
-    async def process_query(self, query: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
+    async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
         """Process incoming queries using GPT and determine if human handoff is needed."""
         logger.info(f"Processing query: {query}")
         
