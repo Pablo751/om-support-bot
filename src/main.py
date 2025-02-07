@@ -7,6 +7,7 @@ from fastapi.security import APIKeyHeader
 from src.services.conversation import ConversationHandler, ConversationState
 from typing import Optional
 from pydantic import BaseModel
+from bson.objectid import ObjectId 
 from src.models.schemas import MessageResponse
 from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
