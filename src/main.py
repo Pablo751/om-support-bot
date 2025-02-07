@@ -58,7 +58,6 @@ async def webhook(request: Request):
         logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
-        # Extract message data
         if 'data' in body:
             logger.info("Wasapi format detected")
             logger.info(f"Data content: {body['data']}")
@@ -92,17 +91,20 @@ async def webhook(request: Request):
         # Process query and check if human handoff needed
         response_text, needs_handoff = await support_system.process_query(
             message,
-            wa_id=wa_id,
             user_name=None
         )
 
         logger.info(f"Generated response: {response_text}")
         logger.info(f"Handoff needed: {needs_handoff}")
-        logger.info(f"Attempting to send to wa_id: {wa_id}")
         
-        # Send immediate response to user
+        # Send response
         response = await whatsapp_api.send_message(wa_id, response_text)
         logger.info(f"Wasapi send response: {response}")
+        
+        # If handoff is needed, create a ticket
+        if needs_handoff:
+            ticket = await support_system._create_support_ticket(wa_id, message)
+            logger.info(f"Created support ticket: {ticket['_id']}")
         
         return {
             "success": True,
