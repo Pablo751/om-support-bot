@@ -207,6 +207,35 @@ async def resolve_ticket(
         logger.error(f"Error resolving ticket: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/check-mongo")
+async def check_mongo():
+    """Endpoint to check MongoDB connection"""
+    try:
+        result = await support_system.check_mongo_connection()
+        return {"mongodb_connected": result}
+    except Exception as e:
+        return {"mongodb_connected": False, "error": str(e)}
+
+@app.post("/reset")
+async def reset_system(clear_tickets: bool = False):
+    """Reset the system state for testing"""
+    global processed_message_ids
+    processed_message_ids.clear()
+    
+    if clear_tickets:
+        # Clear test tickets from MongoDB
+        client = mongodb_service._get_client()
+        db = client['yom-production']
+        collection = db['queries']
+        collection.delete_many({'wa_id': {'$regex': '^test_'}})  # Only delete test tickets
+    
+    return {
+        "success": True,
+        "message": "System reset successful",
+        "processed_messages_cleared": True,
+        "tickets_cleared": clear_tickets
+    }
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
