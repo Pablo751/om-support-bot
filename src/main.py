@@ -58,18 +58,19 @@ async def webhook(request: Request):
         logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
+        # Extract message data
         if 'data' in body:
             logger.info("Wasapi format detected")
             logger.info(f"Data content: {body['data']}")
             message = body['data'].get('message', '')
             wa_id = body['data'].get('wa_id', '')
-            wam_id = body['data'].get('wam_id', '')  # Unique message ID from WhatsApp
+            wam_id = body['data'].get('wam_id', '')
             logger.info(f"Extracted from Wasapi - message: {message}, wa_id: {wa_id}")
         else:
             logger.info("Test format detected")
             message = body.get('message', '')
             wa_id = body.get('wa_id', '')
-            wam_id = body.get('wam_id', '')  # Just in case
+            wam_id = body.get('wam_id', '')
             logger.info(f"Extracted from test format - message: {message}, wa_id: {wa_id}")
 
         if not message or not wa_id:
@@ -77,7 +78,7 @@ async def webhook(request: Request):
             logger.error(error_msg)
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # (2) Deduplication check – skip if we've already processed this wam_id
+        # Deduplication check
         if wam_id and wam_id in processed_message_ids:
             logger.info(f"Duplicate message with wam_id={wam_id}, skipping.")
             return {
@@ -87,22 +88,27 @@ async def webhook(request: Request):
         processed_message_ids.add(wam_id)
 
         logger.info(f"About to process query: {message} for wa_id: {wa_id}")
-        response_text, _ = await support_system.process_query(
+        
+        # Process query and check if human handoff needed
+        response_text, needs_handoff = await support_system.process_query(
             message,
+            wa_id=wa_id,
             user_name=None
         )
 
         logger.info(f"Generated response: {response_text}")
+        logger.info(f"Handoff needed: {needs_handoff}")
         logger.info(f"Attempting to send to wa_id: {wa_id}")
         
-        # Send the response
+        # Send immediate response to user
         response = await whatsapp_api.send_message(wa_id, response_text)
         logger.info(f"Wasapi send response: {response}")
         
         return {
             "success": True,
             "info": "Message processed successfully",
-            "response_text": response_text
+            "response_text": response_text,
+            "handoff_initiated": needs_handoff
         }
 
     except Exception as e:
