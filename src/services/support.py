@@ -176,9 +176,24 @@ class SupportSystem:
         
         return tickets
 
+    async def check_mongo_connection(self):
+        """Verify MongoDB connection and collection access"""
+        try:
+            client = self._get_mongo_client()
+            db = client['yom-production']
+            collection = db['queries']
+            
+            # Try to perform a simple operation
+            result = collection.find_one({})
+            logger.info(f"MongoDB connection test: {'successful' if result is not None else 'no documents found'}")
+            return True
+        except Exception as e:
+            logger.error(f"MongoDB connection error: {e}")
+            return False
+
     async def process_query(self, query: str, wa_id: str, user_name: Optional[str] = None) -> Tuple[str, bool]:
         """Process incoming queries using GPT and determine if human handoff is needed."""
-        logger.info(f"Processing query: {query}")
+        logger.info(f"Processing query for wa_id {wa_id}: {query}")
         
         # Handle basic greetings
         query_lower = query.lower().strip()
@@ -188,20 +203,82 @@ class SupportSystem:
                 f"¡Hey{' ' + user_name if user_name else ''}! 🎉 ¿Cómo puedo ayudarte?",
                 f"¡Bienvenido/a{' ' + user_name if user_name else ''}! 👋 ¿En qué puedo asistirte?"
             ]
-            return (random.choice(greetings), False)
+            return random.choice(greetings), False
         
+        try:
+            # Analyze query with GPT
+            analysis = await self._analyze_with_gpt(query)
+            logger.info(f"GPT Analysis: {analysis}")
+            
+            query_type = analysis.get("query_type", "GENERAL")
+            needs_human = analysis.get('needs_human', True)  # Default to True if not specified
+            confidence = analysis.get('confidence', 0)
+            response_text = analysis.get('response_text', "")
+            
+            # Handle different query types
+            if query_type == "STORE_STATUS":
+                store_info = analysis.get("store_info", {})
+                company_name = store_info.get("company_name")
+                store_id = store_info.get("store_id")
+                
+                if company_name and store_id:
+                    store_status = self._check_store_status(company_name, store_id)
+                    if store_status is None:
+                        return (
+                            "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
+                            True  # Handoff to human
+                        )
+                    elif store_status:
+                        return (
+                            f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.",
+                            False
+                        )
+                    else:
+                        return (
+                            f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
+                            False
+                        )
+            
+            # If confidence is low or needs human attention, create a support ticket
+            if needs_human or confidence < 0.7:
+                logger.info(f"Creating support ticket for wa_id {wa_id}")
+                try:
+                    ticket = await self._create_support_ticket(wa_id, query)
+                    logger.info(f"Support ticket created: {ticket}")
+                    return (
+                        "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad.",
+                        True
+                    )
+                except Exception as e:
+                    logger.error(f"Error creating ticket: {e}")
+                    raise
+            
+            return response_text, False
+            
+        except Exception as e:
+            logger.error(f"Error in process_query: {e}")
+            # Create ticket on error
+            try:
+                ticket = await self._create_support_ticket(wa_id, query)
+                return ("Lo siento, estoy teniendo problemas técnicos. Un agente te ayudará pronto.", True)
+            except Exception as ticket_error:
+                logger.error(f"Error creating error ticket: {ticket_error}")
+                raise
+
+    async def _analyze_with_gpt(self, query: str) -> dict:
+        """Analyze query using GPT and return structured response."""
         try:
             # Prepare knowledge base context
             knowledge_base_context = ""
             if not self.primary_knowledge_base.empty:
-                knowledge_entries = []
-                for _, row in self.primary_knowledge_base.iterrows():
-                    knowledge_entries.append(f"Tema: {row['Heading']}\nRespuesta: {row['Content']}")
+                knowledge_entries = [
+                    f"Tema: {row['Heading']}\nRespuesta: {row['Content']}"
+                    for _, row in self.primary_knowledge_base.iterrows()
+                ]
                 knowledge_base_context = "\n\n".join(knowledge_entries)
         
-            # Your existing GPT prompt
             prompt = f"""NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.
-        
+            
             Analiza esta consulta de soporte y determina el tipo de consulta.
             
             CONSULTA: {query}
@@ -231,79 +308,16 @@ class SupportSystem:
                 "confidence": 0.0-1.0,
                 "response_text": "texto de respuesta al usuario"
             }}"""
-        
-            logger.info("Sending request to OpenAI")
+            
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "Eres un asistente que SOLO responde con JSON válido. NO uses markdown, NO uses comillas triples, NO añadas explicaciones. SOLO JSON."
-                    },
-                    {
-                        "role": "user", 
-                        "content": prompt
-                    }
-                ],
+                messages=[{"role": "system", "content": "SOLO JSON."}, {"role": "user", "content": prompt}],
                 temperature=0.1
             )
-        
-            # Extract and clean the content
-            content = response.choices[0].message.content.strip()
-            content = content.replace('```json', '').replace('```', '').strip()
-            logger.info(f"OpenAI response content: {content}")
-        
-            try:
-                # Parse the JSON response
-                analysis = json.loads(content)
-                logger.info(f"Parsed GPT Analysis: {analysis}")
-        
-                query_type = analysis.get("query_type", "GENERAL")
-                needs_human = analysis.get("needs_human", True)  # Default to human if unsure
-                confidence = analysis.get("confidence", 0)
-                response_text = analysis.get("response_text", "")
-                
-                # Handle different query types
-                if query_type == "STORE_STATUS":
-                    store_info = analysis.get("store_info", {})
-                    company_name = store_info.get("company_name")
-                    store_id = store_info.get("store_id")
-                    
-                    if company_name and store_id:
-                        store_status = self._check_store_status(company_name, store_id)
-                        if store_status is None:
-                            return (
-                                "No pude encontrar información sobre ese comercio. ¿Podrías verificar si el ID y la empresa son correctos? 🔍",
-                                True  # Handoff to human
-                            )
-                        elif store_status:
-                            return (
-                                f"✅ ¡Buenas noticias! El comercio {store_id} de {company_name} está activo y funcionando correctamente.",
-                                False
-                            )
-                        else:
-                            return (
-                                f"❌ El comercio {store_id} de {company_name} está desactivado actualmente.",
-                                False
-                            )
-                
-                # If confidence is low or GPT suggests human handoff
-                if needs_human or confidence < 0.7:
-                    return (
-                        "Un agente revisará tu consulta pronto. Te contactaremos a la brevedad.",
-                        True
-                    )
-                
-                # Return GPT's response if confident enough
-                return (response_text, False)
-                    
-            except json.JSONDecodeError:
-                logger.error("Error parsing GPT response")
-                return ("Lo siento, estoy teniendo problemas técnicos. Un agente te ayudará pronto.", True)
-                
+            return json.loads(response.choices[0].message.content.strip())
         except Exception as e:
-            logger.error(f"Error processing query: {e}", exc_info=True)
-            return ("Lo siento, estoy experimentando dificultades técnicas. Un agente te contactará pronto.", True)
+            logger.error(f"Error in _analyze_with_gpt: {e}")
+            return {"needs_human": True, "response_text": "Hubo un problema técnico al procesar tu consulta."}
 
     def __del__(self):
         """Cleanup MongoDB connection"""
