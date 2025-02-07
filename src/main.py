@@ -160,13 +160,13 @@ async def resolve_ticket(
 
         collection = mongodb_service._get_client()['yom-production']['queries']
         
-        # Get ticket first to verify it exists and get wa_id
+        # Get ticket first to verify it exists
         ticket = collection.find_one({'_id': ObjectId(ticket_id)})
         if not ticket:
             raise HTTPException(status_code=404, detail="Ticket not found")
             
-        # Verify agent is assigned to this ticket
-        if ticket.get('assigned_to') != agent_id:
+        # Modified check: if ticket is assigned, verify the agent
+        if ticket.get('assigned_to') and ticket.get('assigned_to') != agent_id:
             raise HTTPException(
                 status_code=403,
                 detail="Not authorized to resolve this ticket"
@@ -180,7 +180,8 @@ async def resolve_ticket(
             {
                 '$set': {
                     'status': 'resolved',
-                    'resolved_at': now
+                    'resolved_at': now,
+                    'assigned_to': agent_id  # Assign to resolving agent if not already assigned
                 },
                 '$push': {
                     'messages': {
