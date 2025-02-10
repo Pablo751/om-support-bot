@@ -2,14 +2,14 @@ import os
 import logging
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+
 from src.models.schemas import MessageResponse
 from src.services.support import SupportSystem
 from src.services.whatsapp import WhatsAppAPI
-import uvicorn
+from src.services.mongodb import MongoDBService
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-logger.info("Startinng")
 
 app = FastAPI(title="YOM Support Bot", version="1.0.0")
 
@@ -19,11 +19,12 @@ processed_message_ids = set()
 # Initialize components
 support_system = None
 whatsapp_api = None
+mongodb_service = None
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize components with knowledge bases"""
-    global support_system, whatsapp_api
+    global support_system, whatsapp_api, mongodb_service
     
     api_key = os.getenv("WASAPI_API_KEY")
     if not api_key:
@@ -41,6 +42,8 @@ async def startup_event():
         knowledge_base_json='data/knowledge_base.json'
     )
     whatsapp_api = WhatsAppAPI(api_key)
+    mongodb_service = MongoDBService()
+
 
 @app.post("/webhook", response_model=MessageResponse)
 async def webhook(request: Request):
@@ -115,4 +118,5 @@ async def health_check():
     }
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
