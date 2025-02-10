@@ -5,7 +5,6 @@ import logging
 import random
 import certifi
 from typing import Dict, Optional, List, Tuple
-from datetime import datetime
 import pandas as pd
 import openai
 from pymongo import MongoClient
@@ -18,17 +17,10 @@ class SupportSystem:
         self.primary_knowledge_base = self._load_knowledge_base(knowledge_base_csv)
         self.secondary_knowledge_base = self._load_json_knowledge_base(knowledge_base_json) if knowledge_base_json else None
         self.openai_client = openai
-        self.openai_client.api_key = self._get_env_variable('OPENAI_API_KEY')
+        self.openai_client.api_key = os.getenv('OPENAI_API_KEY')
         self.mongo_username = "juanpablo_casado"
-        self.mongo_password = self._get_env_variable('MONGO_PASSWORD')
+        self.mongo_password = os.getenv('MONGO_PASSWORD')
         self.mongo_client = None
-
-    def _get_env_variable(self, var_name: str) -> str:
-        """Safely get environment variable"""
-        value = os.getenv(var_name)
-        if not value:
-            raise EnvironmentError(f"Environment variable '{var_name}' not defined.")
-        return value
 
     def _load_knowledge_base(self, csv_path: str) -> pd.DataFrame:
         """Load knowledge base from CSV"""
@@ -235,9 +227,3 @@ class SupportSystem:
             logger.error(f"Error processing query: {e}", exc_info=True)
             return ("Lo siento, estoy experimentando dificultades técnicas. Por favor, contacta con soporte directamente.", None)
 
-
-    def __del__(self):
-        """Cleanup MongoDB connection"""
-        if self.mongo_client:
-            self.mongo_client.close()
-            logger.info("MongoDB connection closed.")
