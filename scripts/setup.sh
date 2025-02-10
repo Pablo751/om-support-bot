@@ -1,4 +1,4 @@
-# setup.sh
+# scripts/setup.sh
 #!/bin/bash
 
 # Exit on error
