@@ -1,44 +1,12 @@
-# src/config.py
 import os
-from typing import Dict, Any
-from pydantic_settings import BaseSettings
 
-class Settings(BaseSettings):
-    # API Keys
-    WASAPI_API_KEY: str
-    OPENAI_API_KEY: str
-
-    # MongoDB Settings
-    MONGO_USERNAME: str = "juanpablo_casado"
-    MONGO_PASSWORD: str
-    MONGO_URI: str = None
-
-    # Application Settings
-    ENVIRONMENT: str = "development"
-    LOG_LEVEL: str = "INFO"
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
-
-    # OpenAI Settings
-    OPENAI_MODEL: str = "gpt-4o-mini"
-    MAX_TOKENS: int = 150
-    TEMPERATURE: float = 0.7
-
-    # WhatsApp Settings
-    WHATSAPP_API_BASE_URL: str = "https://api.wasapi.io/prod/api/v1"
-    MAX_RETRIES: int = 3
-    RETRY_DELAY: int = 4
-
-    # File Paths
-    KNOWLEDGE_BASE_CSV: str = "data/knowledge_base.csv"
-    KNOWLEDGE_BASE_JSON: str = "data/knowledge_base.json"
-
-    def get_mongo_uri(self) -> str:
-        if not self.MONGO_URI:
-            self.MONGO_URI = f"mongodb+srv://{self.MONGO_USERNAME}:{self.MONGO_PASSWORD}@legacy-production-v6.dmjt9.mongodb.net/yom-production?retryWrites=true&w=majority"
-        return self.MONGO_URI
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
+class Config:
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    WASAPI_BASE_URL = os.getenv("WASAPI_BASE_URL", "https://api.wasapi.io/prod/api/v1")
+    WASAPI_API_KEY = os.getenv("WASAPI_API_KEY", "")
+    KNOWLEDGE_BASE_PATH = 'data/knowledge_base.json'
+    MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "")
+    MONGO_USERNAME = "juanpablo_casado"
+    MONGO_HOST = "legacy-production-v6.dmjt9.mongodb.net"
+    MONGO_DB = "yom-production"
+    MONGO_URL_TEMPLATE = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_HOST}/{MONGO_DB}?retryWrites=true&w=majority"
