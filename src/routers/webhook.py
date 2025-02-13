@@ -32,6 +32,26 @@ async def webhook(request: Request):
             "info": "Error processing message"
         }
 
+@webhook_router.post("/zohoTicket")
+async def health_check(request):
+    logger.info("=============== NEW ZOHO TICKET ===============")
+    body = await request.json()
+    headers = dict(request.headers)
+    logger.info(f"Headers: {headers}")
+    logger.info(f"Raw body: {body}")
+    try:    
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        logger.exception(f"Error processing zoho ticket: {e}")
+        return {
+            "status": "error",
+            "info": "Error processing zoho ticket"
+        }
+
 @webhook_router.get("/health")
 async def health_check():
     try:    
