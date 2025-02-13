@@ -37,8 +37,6 @@ async def health_check(request):
     try:
         logger.info("=============== NEW ZOHO TICKET ===============")
         body = await request.json()
-        headers = dict(request.headers)
-        logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
         return {
             "status": "ok",
