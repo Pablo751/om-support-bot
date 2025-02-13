@@ -33,7 +33,7 @@ async def webhook(request: Request):
         }
 
 @webhook_router.post("/zohoTicket")
-async def health_check(request):
+async def zoho_ticket(request: Request):
     try:
         logger.info("=============== NEW ZOHO TICKET ===============")
         body = await request.json()
