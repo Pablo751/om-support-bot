@@ -84,7 +84,8 @@ class SupportBot:
         
         if True:
             # Send to WhatsApp
-            send_response = await self.whatsapp_api.send_message(self.wa_id, response)
+            message = response.get("response_text")
+            send_response = await self.whatsapp_api.send_message(self.wa_id, message)
             logger.info(f"WhatsApp send response: {send_response}")
 
         if process_again:
