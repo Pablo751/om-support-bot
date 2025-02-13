@@ -34,12 +34,12 @@ async def webhook(request: Request):
 
 @webhook_router.post("/zohoTicket")
 async def health_check(request):
-    logger.info("=============== NEW ZOHO TICKET ===============")
-    body = await request.json()
-    headers = dict(request.headers)
-    logger.info(f"Headers: {headers}")
-    logger.info(f"Raw body: {body}")
-    try:    
+    try:
+        logger.info("=============== NEW ZOHO TICKET ===============")
+        body = await request.json()
+        headers = dict(request.headers)
+        logger.info(f"Headers: {headers}")
+        logger.info(f"Raw body: {body}")
         return {
             "status": "ok",
             "timestamp": datetime.now().isoformat(),
