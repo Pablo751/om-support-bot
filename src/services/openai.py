@@ -7,9 +7,8 @@ from src.config import Config
 logger = logging.getLogger(__name__)
 
 class OpenAIAPI:
-    def __init__(self, api_key: str = Config.OPENAI_API_KEY):
-        self.api_key = api_key
-        openai.api_key = self.api_key
+    def __init__(self):
+        openai.api_key = Config.OPENAI_API_KEY
 
     def analyze_query(self, system_instruction, prompt):
         try:

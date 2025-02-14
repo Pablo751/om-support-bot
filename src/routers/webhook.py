@@ -18,7 +18,7 @@ async def webhook(request: Request):
 
         support_bot = SupportBot()
 
-        response_text = await support_bot.start(body)
+        response_text = await support_bot.start_whatsapp(body)
 
         return {
             "success": True,
@@ -38,16 +38,21 @@ async def zoho_ticket(request: Request):
         logger.info("=============== NEW ZOHO TICKET ===============")
         body = await request.json()
         logger.info(f"Raw body: {body}")
+
+        support_bot = SupportBot()
+
+        response_text = await support_bot.start_zoho(body)
+
         return {
-            "status": "ok",
-            "timestamp": datetime.now().isoformat(),
-            "version": "1.0.0"
+            "success": True,
+            "info": "Message processed successfully",
+            "response_text": response_text
         }
     except Exception as e:
-        logger.exception(f"Error processing zoho ticket: {e}")
+        logger.exception(f"Error processing message: {e}")
         return {
-            "status": "error",
-            "info": "Error processing zoho ticket"
+            "success": False,
+            "info": "Error processing message"
         }
 
 @webhook_router.get("/health")

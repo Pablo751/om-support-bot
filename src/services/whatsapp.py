@@ -8,20 +8,21 @@ from src.config import Config
 logger = logging.getLogger(__name__)
 
 class WhatsAppAPI:
-    def __init__(self, api_key: str = Config.WASAPI_API_KEY, base_url: str = Config.WASAPI_BASE_URL):
-        self.api_key = api_key
-        self.base_url = base_url
-        self.headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
+    def __init__(self):
+        self.api_key = Config.WASAPI_API_KEY
+        self.base_url = Config.WASAPI_BASE_URL
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    async def send_message(self, wa_id: str, message: str) -> Dict:
+    async def send_message(self, wa_id, response):
+        message = response.get("response_text")
         payload = {"message": message, "wa_id": wa_id}
         url = f"{self.base_url}/whatsapp-messages"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
 
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             try:
                 async with session.post(url, json=payload) as response:
                     if response.status not in (200, 201):
