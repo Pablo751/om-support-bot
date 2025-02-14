@@ -1,9 +1,9 @@
 import logging
-import random
 from fastapi import HTTPException
 from src.services.openai import OpenAIAPI
 from src.services.databases import MongoService, KnowledgeBase
 from src.services.whatsapp import WhatsAppAPI
+from src.services.zoho import ZohoAPI
 import src.texts as texts
 
 logger = logging.getLogger(__name__)
@@ -12,6 +12,7 @@ class SupportBot:
     def __init__(self):
         self.openai = OpenAIAPI()
         self.whatsapp_api = WhatsAppAPI()
+        self.zoho_api = ZohoAPI()
         self.mongo_service = MongoService()
         self.knowledge = KnowledgeBase().load_and_build_knowledge()
         self.processed_message_ids = set()
@@ -20,8 +21,20 @@ class SupportBot:
         self.wa_id = None
         self.wam_id = None
         self.message = None
+        self.ticket_id = None
     
-    async def start(self, body):
+    async def start_zoho(self, body):
+        data = body[0].get('payload', {})
+        subject = data.get('subject', 'No Subject')
+        description = data.get('description', 'No Description')
+        self.message = f"{subject}: {description}"
+        self.ticket_id = data.get('id', None)
+        
+        response = await self.process_query(self.message)
+
+        return response
+
+    async def start_whatsapp(self, body):
         data = body['data']
         self.message = data.get('message')
         self.wa_id = data.get('wa_id')
@@ -58,7 +71,7 @@ class SupportBot:
         return act_response
 
     async def act(self, query, response):
-        process_again = False
+        process_again = response.get("process_again", False)
 
         query_type = response.get("query_type", "GENERAL")
 
@@ -82,11 +95,14 @@ class SupportBot:
         if query_type == "STORE_STATUS_MISSING":
             return (texts.STORE_STATUS_MISSING_MSG, ["company_name", "store_id"])
         
-        if True:
-            # Send to WhatsApp
-            message = response.get("response_text")
-            send_response = await self.whatsapp_api.send_message(self.wa_id, message)
+        # Send to WhatsApp
+        if self.wa_id and self.wam_id and self.message: # poor practice
+            send_response = await self.whatsapp_api.send_message(self.wa_id, response)
             logger.info(f"WhatsApp send response: {send_response}")
+        # Send to Zoho
+        else: # poor practice
+            send_response = await self.zoho_api.send_message(self.ticket_id, response)
+            logger.info(f"Zoho send response: {send_response}")
 
         if process_again:
             return await self.process_query(query, response)
