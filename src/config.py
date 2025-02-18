@@ -2,11 +2,11 @@ import os
 
 class Config:
     # OPENAI
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
     # WHATSAPP
-    WASAPI_BASE_URL = os.getenv("WASAPI_BASE_URL", "https://api.wasapi.io/prod/api/v1")
-    WASAPI_API_KEY = os.getenv("WASAPI_API_KEY", "")
+    WASAPI_BASE_URL = os.getenv("WASAPI_BASE_URL")
+    WASAPI_API_KEY = os.getenv("WASAPI_API_KEY")
 
     # ZOHO
     ZOHO_CLIENT_ID = os.getenv("ZOHO_CLIENT_ID")
@@ -14,13 +14,13 @@ class Config:
     ZOHO_REFRESH_TOKEN = os.getenv("ZOHO_REFRESH_TOKEN")
     ZOHO_TOKEN_URL = os.getenv("ZOHO_TOKEN_URL")
     ZOHO_ORG_ID = os.getenv("ZOHO_ORG_ID")
-    ZOHO_DESK_DOMAIN = os.getenv("ZOHO_ZOHO_DESK_DOMAIN")
+    ZOHO_DESK_DOMAIN = os.getenv("ZOHO_DESK_DOMAIN")
 
     # MONGO
-    MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "")
-    MONGO_USERNAME = "juanpablo_casado"
-    MONGO_HOST = "legacy-production-v6.dmjt9.mongodb.net"
-    MONGO_DB = "yom-production"
+    MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+    MONGO_USERNAME = os.getenv("MONGO_USERNAME")
+    MONGO_HOST = os.getenv("MONGO_HOST")
+    MONGO_DB = os.getenv("MONGO_DB")
     MONGO_URL_TEMPLATE = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_HOST}/{MONGO_DB}?retryWrites=true&w=majority"
 
     # OTHER

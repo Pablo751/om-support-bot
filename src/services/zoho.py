@@ -26,7 +26,7 @@ class ZohoAPI:
         token_json = token_response.json()
         access_token = token_json.get("access_token")
 
-        logger.info("New Access Token:", access_token)
+        logger.info(f"New Access Token: {access_token}")
         return access_token
     
     async def send_message(self, ticket_id, response):        
