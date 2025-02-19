@@ -30,10 +30,10 @@ class MongoService:
         self.client = MongoClient(url)
         return self.client
 
-    def check_store_status(self, company_name, store_id, db_name = Config.MONGO_DB):
+    def check_store_status(self, company_name, commerce_id, db_name = Config.MONGO_DB):
         filter_json = {
             "domain": f"{company_name.lower()}.youorder.me",
-            "contact.externalId": str(store_id)
+            "contact.externalId": str(commerce_id)
         }
 
         client = self.get_client()

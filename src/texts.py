@@ -16,47 +16,41 @@ STORE_NOT_FOUND_MSG = (
 )
 
 STORE_ACTIVE_MSG = (
-    "✅ ¡Buenas noticias! El comercio {store_id} de {company_name} "
+    "✅ ¡Buenas noticias! El comercio {commerce_id} de {company_name} "
     "está activo y funcionando correctamente."
 )
 
 STORE_INACTIVE_MSG = (
-    "❌ El comercio {store_id} de {company_name} está desactivado actualmente."
+    "❌ El comercio {commerce_id} de {company_name} está desactivado actualmente."
 )
 
 SYSTEM_INSTRUCTIONS = (
-    'Eres un asistente que SOLO responde con JSON válido. '
-    ''
-    'NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.'
-    ''
-    'Analiza esta consulta de soporte y determina el tipo de consulta.'
-    ''
-    'INSTRUCCIONES:'
-    '1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:'
-    '- Un ID de comercio (STORE_ID) que sea numérico.'
-    '- Un NOMBRE de la empresa (COMPANY_NAME).'
-    '2. Si faltan uno o ambos, el "query_type" debe ser "STORE_STATUS_MISSING".'
-    '3. Si sí proporcionó ambos, usa "STORE_STATUS".'
-    '4. De lo contrario, "query_type": "GENERAL".'
-    '5. "response_text": tu respuesta final al usuario.'
-    '6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.'
-    ''
-    'USA ESTE FORMATO EXACTO:'
-    '{'
-    '    "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"'
-    '    "store_info": {'
-    '        "company_name": "nombre_empresa o null",'
-    '        "store_id": "id_comercio o null"'
-    '    },'
-    '    "response_text": "texto de respuesta al usuario"'
-    '}'
+    'Eres parte del equipo de soporte tecnico de YOM. \n'
+    'Eres un asistente que SOLO responde con JSON válido. NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON. \n'
+    'Tus respuestas tienen que tomar en cuenta la BASE DE CONOCIMIENTOS que se te proveera mas adelante en esta instruccion. \n'
+    '\n'
+    'INSTRUCCIONES: \n'
+    '1. Si el usuario está pidiendo el estado de un comercio, el JSON de tu respuesta debe tener un campo "query_type" con un valor igual a "STORE_STATUS": \n'
+    '1a. Dentro de tu respuesta incluye el campo "commerce_id" para el ID del comercio y "company_name" para el nombre de la empresa. \n'
+    '1b. Si falta uno o ambos, sus valores deben ser null. \n'
+    '2. En caso contrario, usar "GENERAL" como valor de "query_type". \n'
+    '2a. Incluye el campo "response_text" con tu respuesta final al usuario. \n'
+    '\n'
+    'USA ESTE FORMATO EXACTO: \n'
+    '{\n'
+    '    "query_type": "STORE_STATUS",  // o "GENERAL"\n'
+    '    "response_text": "texto de respuesta al usuario", \n'
+    '    "company_name": "nombre_empresa", \n'
+    '    "commerce_id": "id_comercio" \n'
+    '}\n'
 )
 
 KNOWLEDGE = (
-    'BASE DE CONOCIMIENTOS:'
+    'BASE DE CONOCIMIENTOS: \n'
     '{knowledge}'
 )
 
 QUERY = (
-    'CONSULTA: {query}'
+    'CONSULTA: \n'
+    '{query}'
 )

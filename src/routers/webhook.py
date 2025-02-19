@@ -17,8 +17,8 @@ async def process_incoming(message_class, request):
         logger.info(f"Raw body: {body}")
 
         message = message_class(body)
-        support_bot = SupportBot(message)
-        message_response = await support_bot.process_query()
+        support_bot = SupportBot()
+        message_response = await support_bot.process_query(message)
 
         return {
             "success": True,
