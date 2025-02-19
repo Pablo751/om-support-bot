@@ -13,7 +13,6 @@ class ZohoAPI:
         self.token_url = Config.ZOHO_TOKEN_URL
         self.desk_domain = Config.ZOHO_DESK_DOMAIN
         self.org_id = Config.ZOHO_ORG_ID
-        self.access_token = self.get_access_token()
 
     def get_access_token(self):
         token_data = {
@@ -29,11 +28,11 @@ class ZohoAPI:
         logger.info(f"New Access Token: {access_token}")
         return access_token
     
-    async def send_message(self, ticket_id, response):        
-        message = response.get("response_text")
+    async def send_message(self, ticket_id, message):
         comment_url = f"{self.desk_domain}/api/v1/tickets/{ticket_id}/comments"
+        access_token = self.get_access_token()
         headers = {
-            "Authorization": f"Zoho-oauthtoken {self.access_token}",
+            "Authorization": f"Zoho-oauthtoken {access_token}",
             "orgId": self.org_id,
             "Content-Type": "application/json"
         }

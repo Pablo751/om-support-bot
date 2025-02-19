@@ -2,28 +2,28 @@ import logging
 from fastapi import APIRouter, Request
 from src.services.support_bot import SupportBot
 from datetime import datetime
+from src.models.messages import WhatsappMessage, ZohoMessage
 
 logger = logging.getLogger(__name__)
 
 webhook_router = APIRouter()
 
-@webhook_router.post("/webhook")
-async def webhook(request: Request):
+async def process_incoming(message_class, request):
     try:
-        logger.info("=============== NEW WEBHOOK REQUEST ===============")
+        logger.info(f"=============== New {message_class.__name__} ===============")
         body = await request.json()
         headers = dict(request.headers)
         logger.info(f"Headers: {headers}")
         logger.info(f"Raw body: {body}")
 
-        support_bot = SupportBot()
-
-        response_text = await support_bot.start_whatsapp(body)
+        message = message_class(body)
+        support_bot = SupportBot(message)
+        message_response = await support_bot.process_query()
 
         return {
             "success": True,
             "info": "Message processed successfully",
-            "response_text": response_text
+            "response": message_response
         }
     except Exception as e:
         logger.exception(f"Error processing webhook: {e}")
@@ -32,28 +32,14 @@ async def webhook(request: Request):
             "info": "Error processing message"
         }
 
+@webhook_router.post("/webhook")
+async def webhook(request: Request):
+    return await process_incoming(WhatsappMessage, request)
+
+
 @webhook_router.post("/zohoTicket")
 async def zoho_ticket(request: Request):
-    try:
-        logger.info("=============== NEW ZOHO TICKET ===============")
-        body = await request.json()
-        logger.info(f"Raw body: {body}")
-
-        support_bot = SupportBot()
-
-        response_text = await support_bot.start_zoho(body)
-
-        return {
-            "success": True,
-            "info": "Message processed successfully",
-            "response_text": response_text
-        }
-    except Exception as e:
-        logger.exception(f"Error processing message: {e}")
-        return {
-            "success": False,
-            "info": "Error processing message"
-        }
+    return await process_incoming(ZohoMessage, request)
 
 @webhook_router.get("/health")
 async def health_check():

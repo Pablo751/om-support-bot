@@ -24,7 +24,7 @@ STORE_INACTIVE_MSG = (
     "❌ El comercio {store_id} de {company_name} está desactivado actualmente."
 )
 
-SYSTEM_INSTRUCTION = (
+SYSTEM_INSTRUCTIONS = (
     'Eres un asistente que SOLO responde con JSON válido. '
     ''
     'NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.'
