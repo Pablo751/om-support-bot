@@ -25,18 +25,11 @@ STORE_INACTIVE_MSG = (
 )
 
 SYSTEM_INSTRUCTION = (
-    "Eres un asistente que SOLO responde con JSON válido. "
-)
-
-PROMPT_TEMPLATE = (
+    'Eres un asistente que SOLO responde con JSON válido. '
+    ''
     'NO USES MARKDOWN NI CODIGO. RESPONDE SOLAMENTE CON JSON.'
     ''
     'Analiza esta consulta de soporte y determina el tipo de consulta.'
-    ''
-    'CONSULTA: {query}'
-    ''
-    'BASE DE CONOCIMIENTOS:'
-    '{knowledge}'
     ''
     'INSTRUCCIONES:'
     '1. Si el usuario está pidiendo el estado de un comercio, revisa si proporcionó:'
@@ -49,12 +42,21 @@ PROMPT_TEMPLATE = (
     '6. "store_info": si es STORE_STATUS o STORE_STATUS_MISSING, incluye los datos extraídos; si no hay datos, pon null.'
     ''
     'USA ESTE FORMATO EXACTO:'
-    '{{'
+    '{'
     '    "query_type": "STORE_STATUS",  // o "STORE_STATUS_MISSING" o "GENERAL"'
-    '    "store_info": {{'
+    '    "store_info": {'
     '        "company_name": "nombre_empresa o null",'
     '        "store_id": "id_comercio o null"'
-    '    }},'
+    '    },'
     '    "response_text": "texto de respuesta al usuario"'
-    '}}'
+    '}'
+)
+
+KNOWLEDGE = (
+    'BASE DE CONOCIMIENTOS:'
+    '{knowledge}'
+)
+
+QUERY = (
+    'CONSULTA: {query}'
 )

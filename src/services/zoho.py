@@ -41,7 +41,6 @@ class ZohoAPI:
             "content": message,
             "isPublic": False
         }
-        print(comment_url)
         comment_response = requests.post(comment_url, json=comment_data, headers=headers)
         comment_json = comment_response.json()
         return comment_json

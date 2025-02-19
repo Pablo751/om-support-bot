@@ -1,108 +1,166 @@
 {
-  "faq": [
-    {
-      "question": "No puedo ver comercios ni productos",
-      "answer": "Si en el ERP de tu empresa lo actualizaron hace poco, es probable que haya que esperar a que los sistemas se actualicen. Igualmente, puedes probar lo siguiente:\n1. Prueba sincronizando los datos en la aplicación\n2. Asegúrate de tener la última versión\n3. Asegúrate de tener conexión a internet\n4. Verificar con tu supervisor que el comercio o producto se encuentre habilitado",
-      "slug": "no_puedo_ver_comercios_ni_productos"
+    "faq": [
+        {
+            "question": "No puedo ver comercios ni productos",
+            "answer": "Si en el ERP de tu empresa lo actualizaron hace poco, es probable que haya que esperar a que los sistemas se actualicen. Igualmente, puedes probar lo siguiente:\n1. Prueba sincronizando los datos en la aplicación\n2. Asegúrate de tener la última versión\n3. Asegúrate de tener conexión a internet\n4. Verificar con tu supervisor que el comercio o producto se encuentre habilitado",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "No puedo ingresar a la app",
+            "answer": "Si la app te abre adecuadamente pero no logras enrtar con tu usuario, prueba los siguientes pasos:\n1. Verifica que estés ingresando usuario y contraseña adecuadamente\n2. Restablece tu contraseña si no la recuerdas.\n3. Verifica la conexión a Internet y la versión de la aplicación\n\nSi intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
+            "category": "accesos_autenticacion"
+        },
+        {
+            "question": "¿Cómo puedo cambiar la contraseña?",
+            "answer": "1. Abre la aplicación.\n2. Haz click en \"Recuperar contraseña\".\n3. Ingresa a tu correo para cambiar la contraseña.\n4. Vuelve a iniciar sesión.",
+            "category": "accesos_autenticacion"
+        },
+        {
+            "question": "Problemas de sincronización",
+            "answer": "1. Abre la aplicación.\n2. Ingresa con tu usuario y contraseña y selecciona \"Sincronizar\".\n3. Asegúrate de tener una conexión estable a Internet.",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "Por qué la orden aparece pendiente de aprobación?",
+            "answer": "Se debe a que tu supervisor debe aprobar la orden al contar con un descuento mayor al límite establecido, por favor contáctate con él para que revise la orden",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "La aplicación no permite ingresar pedidos",
+            "answer": "1. Asegúrate que la orden cumple con el monto mínimo (si existe) o los descuentos no superan el máximo\n2. Asegúrate de tener sincronizada la aplicación\n3. Asegúrate de tener buena señal de internet, de lo contrario las ordenes quedarán pendientes de procesar hasta que tengas buena señal",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "El precio del producto no es el adecuado",
+            "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio en los precios",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "El producto aparece duplicado",
+            "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio o algo en particular que produzca esto",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "El comercio aparece bloqueado pero ya se desbloqueó",
+            "answer": "Si el desbloqueo del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles",
+            "category": "configuracion_comercios"
+        },
+        {
+            "question": "No aparecen las descripciones ni imagenes de un producto",
+            "answer": "Es posible que esa información no exista en nuestros sistemas; si esto te pasa para más productos, te recomiendo ver a través de tu supervisor para que nos puedan hacer llegar la información y cargarla en nuestros sistemas.",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "No veo mi ruta de hoy",
+            "answer": "1. Asegurate de sincronizar para tener la data más reciente posible\n2. Revisa que tengas seleccionado el filtro para mostrar la ruta del día",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "La orden no tiene ID o numero de orden",
+            "answer": "Verifica que tengas buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor.",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "La aplicación se cae cada vez que intento hacer algo en específico",
+            "answer": "Si intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "Se puede instalar en iphone?",
+            "answer": "De momento la aplicación solo está disponible para sistemas Android",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "Cómo veo qué versión tengo?",
+            "answer": "Puedes verlo en la Play Store, busca la app de YOM ventas y te aparecerá qué versión tienes instalada y si es que hay actualizaciones disponibles.  https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1 ",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "Me aparece un error al sincronizar",
+            "answer": "Verifica que tengas la última versión de la app, buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor. Te adjunto el link para verificar si necesita actualización: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "La información del comercio, como dirección, deuda y cupo no está actualizada",
+            "answer": "Si la actualización de los datos del del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles.",
+            "category": "configuracion_comercios"
+        },
+        {
+            "question": "Cuál es la última versión de la app y cuándo se publicó?",
+            "answer": "Toda la información oficial sobre la última versión y su fecha de actualización está acá: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "No veo un cliente o comercio nuevo",
+            "answer": "Si ingresaste un cliente o comercio nuevo hoy, es posible que aún no sea visible. Esto se debe a que, por una regla de negocio, la información se actualiza y está disponible al día siguiente de su creación.",
+            "category": "configuracion_comercios"
+        },
+        {
+            "question": "Necesito realizar una actualización general",
+            "answer": "No estoy habilitado para realizar una actualización general. Te sugiero gestionar esta solicitud a través del portal de asistencia al cliente en la siguiente URL: http://ayuda.yom.ai/",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "No puedo acceder a mi cuenta / No tengo cuenta de administrador",
+            "answer": "¡No te preocupes! Para obtener acceso como administrador, puedes contactar directamente a tu supervisor o al equipo de soporte. Ellos te ayudarán a configurar tu cuenta con los permisos necesarios.",
+            "category": "accesos_autenticacion"
+        },
+        {
+            "question": "Olvidé mi contraseña (vendedor)",
+            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas:\n 1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo.\n 2. Si esto no funciona, contáctanos y te enviaremos un correo para restablecer tu contraseña.",
+            "category": "accesos_autenticacion"
+        },
+        {
+            "question": "Necesito activar un nuevo comercio",
+            "answer": "¡Bienvenido! Para activar tu comercio solo necesitamos:\n 1. El nombre de tu negocio\n 2. Tu correo electrónico\n Nosotros nos encargaremos de crear tu cuenta y te enviaremos las instrucciones de acceso por correo. ¡En poco tiempo estarás operando!",
+            "category": "configuracion_comercios"
+        },
+        {
+            "question": "No puedo ver mis productos/precios en la APP",
+            "answer": "Verificaremos tu catálogo ahora mismo. Por favor, indícanos:\n 1. ¿Desde cuándo observas este problema?\n 2. ¿Tienes algún producto específico que no puedas ver?\n Nuestro equipo revisará tu configuración y te responderá en breve.",
+            "category": "validacion_troubleshooting"
+        },
+        {
+            "question": "Problemas con el acceso al B2B",
+            "answer": "Revisaremos tu acceso inmediatamente. Para ayudarte mejor, por favor confírmanos:\n 1. El ID o nombre de tu comercio\n 2. El correo con el que intentas acceder\n Nos aseguraremos de que puedas ingresar correctamente a la plataforma.",
+            "category": "accesos_autenticacion"
+        },
+        {
+            "question": "Necesito cambiar el correo asociado a mi cuenta",
+            "answer": "¡Te ayudamos con el cambio! Solo necesitamos:\n 1. Tu ID de comercio o vendedor\n 2. El nuevo correo que quieres utilizar\n Una vez realizado el cambio, recibirás una confirmación en ambos correos (actual y nuevo).",
+            "category": "gestion_usuarios"
+        },
+        {
+            "question": "No encuentro mi código de vendedor",
+            "answer": "¡Te ayudamos a encontrarlo! Necesitaremos:\n 1. Tu nombre completo\n 2. El correo asociado a tu cuenta\n Verificaremos tu información y te proporcionaremos tu código de inmediato.",
+            "category": "gestion_usuarios"
+        },
+        {
+            "question": "La APP no funciona correctamente",
+            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos:\n 1. ¿Qué problema específico estás experimentando?\n 2. ¿En qué momento ocurre?\n Mientras tanto, puedes intentar:\n - Cerrar y volver a abrir la APP\n - Verificar tu conexión a internet",
+            "category": "validacion_troubleshooting"
+        }
+    ],
+    "categories": {
+        "accesos_autenticacion": {
+            "name": "Accesos y Autenticación",
+            "description": "Problemas relacionados con el ingreso y autenticación de usuarios"
+        },
+        "configuracion_comercios": {
+            "name": "Configuración de Comercios",
+            "description": "Gestión y configuración de comercios en la plataforma"
+        },
+        "validacion_troubleshooting": {
+            "name": "Validación y Troubleshooting",
+            "description": "Resolución de problemas técnicos y validación de funcionamiento"
+        },
+        "gestion_usuarios": {
+            "name": "Gestión de Usuarios",
+            "description": "Administración y gestión de usuarios y perfiles"
+        }
     },
-    {
-      "question": "No puedo ingresar a la app",
-      "answer": "Si la app te abre adecuadamente pero no logras enrtar con tu usuario, prueba los siguientes pasos:\n1. Verifica que estés ingresando usuario y contraseña adecuadamente\n2. Restablece tu contraseña si no la recuerdas.\n3. Verifica la conexión a Internet y la versión de la aplicación\n\nSi intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
-      "slug": "no_puedo_ingresar_a_la_app"
-    },
-    {
-      "question": "¿Cómo puedo cambiar la contraseña?",
-      "answer": "1. Abre la aplicación.\n2. Haz click en \"Recuperar contraseña\".\n3. Ingresa a tu correo para cambiar la contraseña.\n4. Vuelve a iniciar sesión.",
-      "slug": "¿cómo_puedo_cambiar_la_contraseña?"
-    },
-    {
-      "question": "Problemas de sincronización",
-      "answer": "1. Abre la aplicación.\n2. Ingresa con tu usuario y contraseña y selecciona \"Sincronizar\".\n3. Asegúrate de tener una conexión estable a Internet.",
-      "slug": "problemas_de_sincronización"
-    },
-    {
-      "question": "Por qué la orden aparece pendiente de aprobación?",
-      "answer": "Se debe a que tu supervisor debe aprobar la orden al contar con un descuento mayor al límite establecido, por favor contáctate con él para que revise la orden",
-      "slug": "por_qué_la_orden_aparece_pendiente_de_aprobación?"
-    },
-    {
-      "question": "La aplicación no permite ingresar pedidos",
-      "answer": "1. Asegúrate que la orden cumple con el monto mínimo (si existe) o los descuentos no superan el máximo\n2. Asegúrate de tener sincronizada la aplicación\n3. Asegúrate de tener buena señal de internet, de lo contrario las ordenes quedarán pendientes de procesar hasta que tengas buena señal",
-      "slug": "la_aplicación_no_permite_ingresar_pedidos"
-    },
-    {
-      "question": "El precio del producto no es el adecuado",
-      "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio en los precios",
-      "slug": "el_precio_del_producto_no_es_el_adecuado"
-    },
-    {
-      "question": "El producto aparece duplicado",
-      "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio o algo en particular que produzca esto",
-      "slug": "el_producto_aparece_duplicado"
-    },
-    {
-      "question": "El comercio aparece bloqueado pero ya se desbloqueó",
-      "answer": "Si el desbloqueo del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles",
-      "slug": "el_comercio_aparece_bloqueado_pero_ya_se_desbloque"
-    },
-    {
-      "question": "No aparecen las descripciones ni imagenes de un producto",
-      "answer": "Es posible que esa información no exista en nuestros sistemas; si esto te pasa para más productos, te recomiendo ver a través de tu supervisor para que nos puedan hacer llegar la información y cargarla en nuestros sistemas.",
-      "slug": "no_aparecen_las_descripciones_ni_imagenes_de_un_pr"
-    },
-    {
-      "question": "No veo mi ruta de hoy",
-      "answer": "1. Asegurate de sincronizar para tener la data más reciente posible\n2. Revisa que tengas seleccionado el filtro para mostrar la ruta del día",
-      "slug": "no_veo_mi_ruta_de_hoy"
-    },
-    {
-      "question": "La orden no tiene ID o numero de orden",
-      "answer": "Verifica que tengas buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor.",
-      "slug": "la_orden_no_tiene_id_o_numero_de_orden"
-    },
-    {
-      "question": "La aplicación se cae cada vez que intento hacer algo en específico",
-      "answer": "Si intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
-      "slug": "la_aplicación_se_cae_cada_vez_que_intento_hacer_al"
-    },
-    {
-      "question": "Se puede instalar en iphone?",
-      "answer": "De momento la aplicación solo está disponible para sistemas Android",
-      "slug": "se_puede_instalar_en_iphone?"
-    },
-    {
-      "question": "Cómo veo qué versión tengo?",
-      "answer": "Puedes verlo en la Play Store, busca la app de YOM ventas y te aparecerá qué versión tienes instalada y si es que hay actualizaciones disponibles.  https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1 ",
-      "slug": "cómo_veo_qué_versión_tengo?"
-    },
-    {
-      "question": "Me aparece un error al sincronizar",
-      "answer": "Verifica que tengas la última versión de la app, buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor. Te adjunto el link para verificar si necesita actualización: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
-      "slug": "me_aparece_un_error_al_sincronizar"
-    },
-    {
-      "question": "La información del comercio, como dirección, deuda y cupo no está actualizada",
-      "answer": "Si la actualización de los datos del del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles.",
-      "slug": "la_información_del_comercio,_como_dirección,_deuda"
-    },
-    {
-      "question": "Cuál es la última versión de la app y cuándo se publicó?",
-      "answer": "Toda la información oficial sobre la última versión y su fecha de actualización está acá: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
-      "slug": "cuál_es_la_última_versión_de_la_app_y_cuándo_se_pu"
-    },
-    {
-      "question": "No veo un cliente o comercio nuevo",
-      "answer": "Si ingresaste un cliente o comercio nuevo hoy, es posible que aún no sea visible. Esto se debe a que, por una regla de negocio, la información se actualiza y está disponible al día siguiente de su creación.",
-      "slug": "no_veo_un_cliente_o_comercio_nuevo"
-    },
-    {
-      "question": "Necesito realizar una actualización general ",
-      "answer": "No estoy habilitado para realizar una actualización general. Te sugiero gestionar esta solicitud a través del portal de asistencia al cliente en la siguiente URL: http://ayuda.yom.ai/  ",
-      "slug": "necesito_realizar_una_actualización_general_"
+    "metadata": {
+        "total_entries": 28,
+        "last_updated": "2025-02-18"
     }
-  ],
-  "metadata": {
-    "total_entries": 20,
-    "last_updated": "2025-01-15T12:54:30.606277"
-  }
 }
