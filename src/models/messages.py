@@ -1,6 +1,7 @@
 import logging
 from src.services.whatsapp import WhatsAppAPI
 from src.services.zoho import ZohoAPI
+from src.tools import clean_text
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +31,10 @@ class WhatsappMessage(Message):
 class ZohoMessage(Message):
     def __init__(self, body):
         data = body[0].get('payload', {})
+        subject = clean_text(data.get('subject'))
+        description = clean_text(data.get('description'))
         super().__init__(
             api=ZohoAPI(),
             id=data.get('id'),
-            query=f"{data.get('subject')}: {data.get('description')}"
+            query=f"TITULO: {subject}\n\nDESCRIPCION: \n{description}"
         )

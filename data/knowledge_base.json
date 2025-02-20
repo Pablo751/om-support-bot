@@ -1,166 +1,118 @@
 {
     "faq": [
         {
-            "question": "No puedo ver comercios ni productos",
-            "answer": "Si en el ERP de tu empresa lo actualizaron hace poco, es probable que haya que esperar a que los sistemas se actualicen. Igualmente, puedes probar lo siguiente:\n1. Prueba sincronizando los datos en la aplicación\n2. Asegúrate de tener la última versión\n3. Asegúrate de tener conexión a internet\n4. Verificar con tu supervisor que el comercio o producto se encuentre habilitado",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "No puedo ingresar a la app",
-            "answer": "Si la app te abre adecuadamente pero no logras enrtar con tu usuario, prueba los siguientes pasos:\n1. Verifica que estés ingresando usuario y contraseña adecuadamente\n2. Restablece tu contraseña si no la recuerdas.\n3. Verifica la conexión a Internet y la versión de la aplicación\n\nSi intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
-            "category": "accesos_autenticacion"
-        },
-        {
-            "question": "¿Cómo puedo cambiar la contraseña?",
-            "answer": "1. Abre la aplicación.\n2. Haz click en \"Recuperar contraseña\".\n3. Ingresa a tu correo para cambiar la contraseña.\n4. Vuelve a iniciar sesión.",
-            "category": "accesos_autenticacion"
-        },
-        {
-            "question": "Problemas de sincronización",
-            "answer": "1. Abre la aplicación.\n2. Ingresa con tu usuario y contraseña y selecciona \"Sincronizar\".\n3. Asegúrate de tener una conexión estable a Internet.",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "Por qué la orden aparece pendiente de aprobación?",
-            "answer": "Se debe a que tu supervisor debe aprobar la orden al contar con un descuento mayor al límite establecido, por favor contáctate con él para que revise la orden",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "La aplicación no permite ingresar pedidos",
-            "answer": "1. Asegúrate que la orden cumple con el monto mínimo (si existe) o los descuentos no superan el máximo\n2. Asegúrate de tener sincronizada la aplicación\n3. Asegúrate de tener buena señal de internet, de lo contrario las ordenes quedarán pendientes de procesar hasta que tengas buena señal",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "El precio del producto no es el adecuado",
-            "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio en los precios",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "El producto aparece duplicado",
-            "answer": "1. Intenta sincronizando nuevamente para asegurarte de que tengas los datos más actualizados posibles\n2. Contacta a tu supervisor para corroborar que no haya habido un cambio o algo en particular que produzca esto",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "El comercio aparece bloqueado pero ya se desbloqueó",
-            "answer": "Si el desbloqueo del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles",
-            "category": "configuracion_comercios"
-        },
-        {
-            "question": "No aparecen las descripciones ni imagenes de un producto",
-            "answer": "Es posible que esa información no exista en nuestros sistemas; si esto te pasa para más productos, te recomiendo ver a través de tu supervisor para que nos puedan hacer llegar la información y cargarla en nuestros sistemas.",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "No veo mi ruta de hoy",
-            "answer": "1. Asegurate de sincronizar para tener la data más reciente posible\n2. Revisa que tengas seleccionado el filtro para mostrar la ruta del día",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "La orden no tiene ID o numero de orden",
-            "answer": "Verifica que tengas buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor.",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "La aplicación se cae cada vez que intento hacer algo en específico",
-            "answer": "Si intentas abrir la aplicación pero se queda pegada o se te cae inmediatamente, puedes probar:\n1. Verifica que tengas la última versión actualizada\n2. Si no tienes ordenes sin guardar, puedes probar eliminar caché. Esto se hace manteniendo presionado el icono de la aplicación > configuración > almacenamiento",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "Se puede instalar en iphone?",
-            "answer": "De momento la aplicación solo está disponible para sistemas Android",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "Cómo veo qué versión tengo?",
-            "answer": "Puedes verlo en la Play Store, busca la app de YOM ventas y te aparecerá qué versión tienes instalada y si es que hay actualizaciones disponibles.  https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1 ",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "Me aparece un error al sincronizar",
-            "answer": "Verifica que tengas la última versión de la app, buena señal de internet, sincroniza la aplicación y revisa nuevamente por favor. Te adjunto el link para verificar si necesita actualización: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "La información del comercio, como dirección, deuda y cupo no está actualizada",
-            "answer": "Si la actualización de los datos del del comercio se realizó hace poco, es posible que debas esperar a que esta información se actualice en nuestros sistemas. Por mientras puedes probar sincronizando nuevamente para asegurarte de que tengas los datos más recientes posibles.",
-            "category": "configuracion_comercios"
-        },
-        {
-            "question": "Cuál es la última versión de la app y cuándo se publicó?",
-            "answer": "Toda la información oficial sobre la última versión y su fecha de actualización está acá: https://play.google.com/store/apps/details?id=me.youorder.yomventas&hl=es_419&pli=1",
-            "category": "validacion_troubleshooting"
-        },
-        {
-            "question": "No veo un cliente o comercio nuevo",
-            "answer": "Si ingresaste un cliente o comercio nuevo hoy, es posible que aún no sea visible. Esto se debe a que, por una regla de negocio, la información se actualiza y está disponible al día siguiente de su creación.",
-            "category": "configuracion_comercios"
-        },
-        {
-            "question": "Necesito realizar una actualización general",
-            "answer": "No estoy habilitado para realizar una actualización general. Te sugiero gestionar esta solicitud a través del portal de asistencia al cliente en la siguiente URL: http://ayuda.yom.ai/",
-            "category": "validacion_troubleshooting"
-        },
-        {
             "question": "No puedo acceder a mi cuenta / No tengo cuenta de administrador",
             "answer": "¡No te preocupes! Para obtener acceso como administrador, puedes contactar directamente a tu supervisor o al equipo de soporte. Ellos te ayudarán a configurar tu cuenta con los permisos necesarios.",
-            "category": "accesos_autenticacion"
+            "category": "Accesos y Autenticación",
+            "support_level": "L1"
         },
         {
             "question": "Olvidé mi contraseña (vendedor)",
-            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas:\n 1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo.\n 2. Si esto no funciona, contáctanos y te enviaremos un correo para restablecer tu contraseña.",
-            "category": "accesos_autenticacion"
+            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas: \n1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo. \n2. Si esto no funciona, contáctanos y te enviaremos un correo para restablecer tu contraseña.",
+            "category": "Accesos y Autenticación",
+            "support_level": "L1"
         },
         {
             "question": "Necesito activar un nuevo comercio",
-            "answer": "¡Bienvenido! Para activar tu comercio solo necesitamos:\n 1. El nombre de tu negocio\n 2. Tu correo electrónico\n Nosotros nos encargaremos de crear tu cuenta y te enviaremos las instrucciones de acceso por correo. ¡En poco tiempo estarás operando!",
-            "category": "configuracion_comercios"
+            "answer": "¡Bienvenido! Para activar tu comercio solo necesitamos: \n1. El nombre de tu negocio \n2. Tu correo electrónico \nNosotros nos encargaremos de crear tu cuenta y te enviaremos las instrucciones de acceso por correo. ¡En poco tiempo estarás operando!",
+            "category": "Configuración de Comercios",
+            "support_level": "L1"
         },
         {
             "question": "No puedo ver mis productos/precios en la APP",
-            "answer": "Verificaremos tu catálogo ahora mismo. Por favor, indícanos:\n 1. ¿Desde cuándo observas este problema?\n 2. ¿Tienes algún producto específico que no puedas ver?\n Nuestro equipo revisará tu configuración y te responderá en breve.",
-            "category": "validacion_troubleshooting"
+            "answer":  "Verificaremos tu catálogo ahora mismo. Por favor, indícanos: \n1. ¿Desde cuándo observas este problema? \n2. ¿Tienes algún producto específico que no puedas ver? \nNuestro equipo revisará tu configuración y te responderá en breve.",
+            "category": "Validación y Troubleshooting",
+            "support_level": "L1"
         },
         {
             "question": "Problemas con el acceso al B2B",
-            "answer": "Revisaremos tu acceso inmediatamente. Para ayudarte mejor, por favor confírmanos:\n 1. El ID o nombre de tu comercio\n 2. El correo con el que intentas acceder\n Nos aseguraremos de que puedas ingresar correctamente a la plataforma.",
-            "category": "accesos_autenticacion"
+            "answer": "Revisaremos tu acceso inmediatamente. Para ayudarte mejor, por favor confírmanos: \n1. El ID o nombre de tu comercio \n2. El correo con el que intentas acceder \nNos aseguraremos de que puedas ingresar correctamente a la plataforma.",
+            "category": "Accesos y Autenticación",
+            "support_level": "L1"
         },
         {
             "question": "Necesito cambiar el correo asociado a mi cuenta",
-            "answer": "¡Te ayudamos con el cambio! Solo necesitamos:\n 1. Tu ID de comercio o vendedor\n 2. El nuevo correo que quieres utilizar\n Una vez realizado el cambio, recibirás una confirmación en ambos correos (actual y nuevo).",
-            "category": "gestion_usuarios"
+            "answer": "¡Te ayudamos con el cambio! Solo necesitamos: \n1. Tu ID de comercio o vendedor \n2. El nuevo correo que quieres utilizar \nUna vez realizado el cambio, recibirás una confirmación en ambos correos (actual y nuevo).",
+            "category": "Gestión de Usuarios",
+            "support_level": "L1"
         },
         {
             "question": "No encuentro mi código de vendedor",
-            "answer": "¡Te ayudamos a encontrarlo! Necesitaremos:\n 1. Tu nombre completo\n 2. El correo asociado a tu cuenta\n Verificaremos tu información y te proporcionaremos tu código de inmediato.",
-            "category": "gestion_usuarios"
+            "answer": "¡Te ayudamos a encontrarlo! Necesitaremos: \n1. Tu nombre completo \n2. El correo asociado a tu cuenta \nVerificaremos tu información y te proporcionaremos tu código de inmediato.",
+            "category": "Gestión de Usuarios",
+            "support_level": "L1"
         },
         {
             "question": "La APP no funciona correctamente",
-            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos:\n 1. ¿Qué problema específico estás experimentando?\n 2. ¿En qué momento ocurre?\n Mientras tanto, puedes intentar:\n - Cerrar y volver a abrir la APP\n - Verificar tu conexión a internet",
-            "category": "validacion_troubleshooting"
+            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos: \n1. ¿Qué problema específico estás experimentando? \n2. ¿En qué momento ocurre? \nMientras tanto, puedes intentar: \n- Cerrar y volver a abrir la APP \n- Verificar tu conexión a internet",
+            "category": "Validación y Troubleshooting",
+            "support_level": "L1"
+        },
+        {
+            "question": "Asignación de clientes a comercios/ o validación de clientes, Cambios de correos",
+            "answer": "Para realizar este requerimiento debes hacer lo siguiente: \nIngresar al Youorder.me | Admin, con cuenta de Administrador. \n1. Acceder al apartado **“Usuarios”**. \n2. Seleccionar **“Comercios”**. \n3. Utilizar el buscador para ingresar el nombre o el ID del comercio. \n4. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente. \n5. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "Como crear cuenta de administrador",
+            "answer": "Primero debes entrar al Administrador de Yom: https://admin.youorder.me/ \nIr a la sección Configuraciones, \nLuego en usuarios dirigirse a administradores \nSeleccionar el botón invitar administrador \nDeberás rellenar los campos que se solicitan \nEnviar invitación al correo electrónico que se anotó en los campos. \nUna vez que la persona acepte, en la seccion \"invitaciones\" dirigete a solicitudes recibidas, debes aprobar el usuario",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "¿Cómo le envió invitación para recuperar contraseña a un vendedor?",
+            "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos: \nPrimero debes entrar al Administrador de Yom: https://admin.youorder.me/ \nIr a la sección Configuraciones, \nluego a usuarios, dirigirse a vendedores \nSeleccionar el botón invitar vendedor \nrellenar los campos solicitados con la información vigente del vendedor Se enviará automáticamente un correo permitiendo cambiar la contraseña \n \nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "Activaciones de cuenta de Comercio",
+            "answer": "Si quieres activarle la cuenta a un comercio debes: \n1. Ingresar al Admin de Yom con una cuenta de administrador \n2. Ir a la sección \"Usuarios\" hacer click en \"Comercios\" y hacer click en \"invitar comercio\" \n3. En esta sección debes agregar el nombre del comercio y el correo que te indicó ese cliente y hacer click en \"enviar\". \n4. Una vez que el comercio se haya registrado, debes ir a la sección \"invitaciones\" y hacer click en \"solicitudes recibidas\", acá encontraras el comercio que debes autorizar. \n4. Una vez que el Comercio haya sido creado, debes seguir los pasos de asignacion de clientes a comercios. \n5. Acceder al apartado **“Usuarios”**. \n6. Seleccionar **“Comercios”**. \n7. Utilizar el buscador para ingresar el nombre o el ID del comercio. \n8. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente. \n9. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).* \n  \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "Deseo cambiar un correo de vendedor a un código de vendedor",
+            "answer": "1. Ingresar al Admin de Yom con una cuenta de administrador \n2. Ir a la sección \"Usuarios\", hacer click en \"Vendedores\" y hacer click en \"invitar vendedor\" \n3. En esta sección debes agregar el nombre del vendedor, el correo que quieres asociar a este vendedor y buscar el código de este vendedor en la sección \"seleccionar código del vendedor\"  \nSi no encuentras un código para el vendedor , puedes hacer click en \"crear codigo vendedor\" que se encuentra justo abajo del item \"seleccionar código del vendedor\"  \n \nSi el problema persiste, esto puede deberse a un problema de la empresa para la cual trabajas, para eso debes contactarte con tu supervisor a cargo para solucionar el problema.  \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "Validaciones en App",
+            "answer": "**Verificar un producto, comercio o cualquier inconveniente reportado en YOM Ventas (App Móvil)** \n \n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador. \n2. Acceder al apartado Gestión de vendedores → Vendedores  \n3. Buscar tu cuenta de vendedor (Si no cuentas con una, debes crearla en el mismo Admin.) \n4. Accede a tu cuenta de vendedor en el Administrador y selecciona **“Modificar”**. Aquí debes asignarte el vendedor que reporta el inconveniente, lo que se conoce como **“Cuenta Espejo”**, ya que tomarás el ID del vendedor para replicar su cuenta en la app. \n5. Una vez asignado el vendedor a tu correo de vendedor, ingresa a la app en un dispositivo Android. \n6. Inicia sesión con tu cuenta de vendedor. \n7. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del vendedor, por lo que no debes eliminar productos del carrito ni procesar órdenes.)* \n \nEscenarios posibles después de la verificación:  \nA) Si todo funciona correctamente: \n \nAvisanos para cerrar el caso. \n \nSi no: \n \nPuedes indicarnos el ID del producto/comercio o vendedor (estos números los puedes encontrar en tu perfil de usuario en la app o en los correos que te llegan cuando un comercio compra) \n \n¿En qué momento exacto ocurre el problema? \n¿Puedes compartir capturas de pantalla del error? \n¿El problema es consistente o intermitente? \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
+            "category": "Validación y Troubleshooting",
+            "support_level": "L2"
+        },
+        {
+            "question": "Validaciones en B2B",
+            "answer": "1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador. \n2. Acceder al apartado Usuarios → Comercios \n3. Busca el comercio en cuestión  \n4. Baja hasta apartado “Información de los usuarios” \n5. Aquí debes añadir al listado(puede estar vacío) tu cuenta de B2B o la de Felipe: \nUsuario: [Felipe.munoz+b2bsoprole@youorder.me](mailto:Felipe.munoz+b2bsoprole@youorder.me) (generalmente se ocupa esta cuenta) \n6. Una vez asignado en el Admin. debes acceder al B2B del cliente e ingresar con la cuenta de Felipe. \n7. Dentro del B2B debes buscar el ID del comercio en cuestión y ahí tendrás acceso al B2B del cliente \n8. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del comercio, por lo que no debes eliminar productos del carrito ni procesar órdenes.)* \n \nEscenarios después de la verificación: \nA) Si todo funciona correctamente: \n \nAvisanos para cerrar el caso! \n \nB) Si se detecta un problema: \n \nProblemas de acceso: \n \nVerificar permisos del usuario \nConfirmar que el comercio está activo \nValidar la configuración de la empresa asociada \n \n \nProblemas de catálogo: \n \nVerificar la lista de precios asignada \nRevisa el archivo que cargan para la integración \nValidar reglas de negocio aplicadas \nConfirmar disponibilidad de productos \n \n \nProblemas de órdenes: \n \nRevisar el historial de pedidos \nVerificar estado de crédito \nValidar restricciones de compra \n \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
+            "category": "Validación y Troubleshooting",
+            "support_level": "L2"
+        },
+        {
+            "question": "¿Cómo asignar un código ya creado a un nuevo vendedor?",
+            "answer": "Entrar al Administrador de Yom: https://admin.youorder.me/ \nSeleccionar configuración, y en la seccion \"usuarios\" hacer click en \"vendedores\" \nSeleccionar en el vendedor al que se le quiere modificar el código y estando en el perfil del vendedor apretar el botón que dice \"modificar\" para cambiar el código.",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "No puedo acceder a mi cuenta / No tengo cuenta de administrador",
+            "answer": "¡No te preocupes! Para obtener acceso como administrador, puedes contactar directamente a tu supervisor. Este puede escalarlo al administrador y te ayudarán a configurar tu cuenta con los permisos necesarios.",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "Olvidé mi contraseña (vendedor)",
+            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas: \n 1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo. \n 2. Si esto no funciona, avísanos y te enviaremos un correo para restablecer tu contraseña. \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
+        },
+        {
+            "question": "La APP no funciona correctamente",
+            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos: \n 1. ¿Qué problema específico estás experimentando? \n 2. ¿En qué momento ocurre? \n Mientras tanto, puedes intentar: \n - Cerrar y volver a abrir la APP \n - Verificar tu conexión a internet",
+            "category": "Validación y Troubleshooting",
+            "support_level": "L2"
         }
-    ],
-    "categories": {
-        "accesos_autenticacion": {
-            "name": "Accesos y Autenticación",
-            "description": "Problemas relacionados con el ingreso y autenticación de usuarios"
-        },
-        "configuracion_comercios": {
-            "name": "Configuración de Comercios",
-            "description": "Gestión y configuración de comercios en la plataforma"
-        },
-        "validacion_troubleshooting": {
-            "name": "Validación y Troubleshooting",
-            "description": "Resolución de problemas técnicos y validación de funcionamiento"
-        },
-        "gestion_usuarios": {
-            "name": "Gestión de Usuarios",
-            "description": "Administración y gestión de usuarios y perfiles"
-        }
-    },
-    "metadata": {
-        "total_entries": 28,
-        "last_updated": "2025-02-18"
-    }
+    ]
 }
