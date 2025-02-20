@@ -33,8 +33,9 @@ class ZohoMessage(Message):
         data = body[0].get('payload', {})
         subject = clean_text(data.get('subject'))
         description = clean_text(data.get('description'))
+        client = clean_text(data.get('customFields').get('Organizaci\u00f3n'))
         super().__init__(
             api=ZohoAPI(),
             id=data.get('id'),
-            query=f"TITULO: {subject}\n\nDESCRIPCION: \n{description}"
+            query=f"CLIENTE: {client}\n\nTITULO: {subject}\n\nDESCRIPCION: \n{description}"
         )

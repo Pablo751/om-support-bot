@@ -6,7 +6,7 @@ TECHNICAL_ISSUE_MSG = (
 STORE_STATUS_MISSING_MSG = (
     "Para poder verificar el estado del comercio necesito dos datos importantes:\n"
     "1️⃣ El ID del comercio (p.ej.: 100005336)\n"
-    "2️⃣ El nombre de la empresa (p.ej.: soprole)\n\n"
+    "2️⃣ El nombre del cliente/empresa (p.ej.: soprole)\n\n"
     "¿Podrías proporcionarme esta información? 🤔"
 )
 
@@ -16,12 +16,12 @@ STORE_NOT_FOUND_MSG = (
 )
 
 STORE_ACTIVE_MSG = (
-    "✅ ¡Buenas noticias! El comercio {commerce_id} de {company_name} "
+    "✅ ¡Buenas noticias! El comercio {commerce_id} de {client_name} "
     "está activo y funcionando correctamente."
 )
 
 STORE_INACTIVE_MSG = (
-    "❌ El comercio {commerce_id} de {company_name} está desactivado actualmente."
+    "❌ El comercio {commerce_id} de {client_name} está desactivado actualmente."
 )
 
 SYSTEM_INSTRUCTIONS = (
@@ -31,21 +31,19 @@ SYSTEM_INSTRUCTIONS = (
     '\n'
     'INSTRUCCIONES: \n'
     '1. Si el usuario está pidiendo el estado de un comercio, el JSON de tu respuesta debe tener un campo "query_type" con un valor igual a "STORE_STATUS": \n'
-    '1a. Dentro de tu respuesta incluye el campo "commerce_id" para el ID del comercio y "company_name" para el nombre de la empresa. \n'
+    '1a. Dentro de tu respuesta incluye el campo "commerce_id" para el ID del comercio y "client_name" para el nombre del cliente/empresa. \n'
     '1b. Si falta uno o ambos, sus valores deben ser null. \n'
     '2. En caso contrario, usar "GENERAL" como valor de "query_type". \n'
     '2a. Incluye el campo "response_text" con tu respuesta final al usuario. \n'
     '\n'
     'USA ESTE FORMATO EXACTO: \n'
-    '{\n'
+    '{{\n'
     '    "query_type": "STORE_STATUS",  // o "GENERAL"\n'
     '    "response_text": "texto de respuesta al usuario", \n'
-    '    "company_name": "nombre_empresa", \n'
+    '    "client_name": "nombre_cliente", // Esta informacion no siempre es explicita. Por ejemplo, te dira que es de _algo_, pero sin especificar que es _algo_ es el nombre del cliente/empresa. Lo mismo con el dominio del correo, o cualquier otra pista. \n'
     '    "commerce_id": "id_comercio" \n'
-    '}\n'
-)
-
-KNOWLEDGE = (
+    '}}\n'
+    '\n'
     'BASE DE CONOCIMIENTOS: \n'
     '{knowledge}'
 )

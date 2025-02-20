@@ -8,16 +8,14 @@ class OpenAIAPI:
     def __init__(self):
         openai.api_key = Config.OPENAI_API_KEY
 
-    def analyze_query(self, system_instructions, knowledge, query):
+    def analyze_query(self, system_instructions, query):
         try:
             response = openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_instructions},
-                    {"role": "system", "content": knowledge},
                     {"role": "user", "content": query}
                 ],
-                temperature=0.1
             )
             content = response.choices[0].message.content.strip()
             content = content.replace('```json', '').replace('```', '').strip()
