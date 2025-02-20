@@ -53,6 +53,11 @@
             "answer": "Para realizar este requerimiento debes hacer lo siguiente: \nIngresar al Youorder.me | Admin, con cuenta de Administrador. \n1. Acceder al apartado **“Usuarios”**. \n2. Seleccionar **“Comercios”**. \n3. Utilizar el buscador para ingresar el nombre o el ID del comercio. \n4. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente. \n5. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*",
             "category": "Gestión de Usuarios",
             "support_level": "L2"
+        },{
+            "question": "Que pasa si no tengo cuenta de administrador?",
+            "answer": "Si necesitas activar una cuenta como administrador, debes pedirselo a un administrador de tu empresa o bien contactar al CSS a cargo",
+            "category": "Gestión de Usuarios",
+            "support_level": "L2"
         },
         {
             "question": "Como crear cuenta de administrador",
@@ -62,7 +67,7 @@
         },
         {
             "question": "¿Cómo le envió invitación para recuperar contraseña a un vendedor?",
-            "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos: \nPrimero debes entrar al Administrador de Yom: https://admin.youorder.me/ \nIr a la sección Configuraciones, \nluego a usuarios, dirigirse a vendedores \nSeleccionar el botón invitar vendedor \nrellenar los campos solicitados con la información vigente del vendedor Se enviará automáticamente un correo permitiendo cambiar la contraseña \n \nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.",
+            "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos:\n\nPrimero intenta pidiendole al vendedor que use este enlace: https://admin.youorder.me/recover-password\nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.\n\nSi nada de esto funciona, avísanos para tomar tu caso.",
             "category": "Gestión de Usuarios",
             "support_level": "L2"
         },

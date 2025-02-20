@@ -1,6 +1,4 @@
-import certifi
 import logging
-from typing import Optional
 from pymongo import MongoClient
 from src.config import Config
 import json
