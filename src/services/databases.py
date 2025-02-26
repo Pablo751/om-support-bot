@@ -9,7 +9,7 @@ class KnowledgeBase:
     def __init__(self):
         self.knowledge_base_path = Config.KNOWLEDGE_BASE_PATH
 
-    def load_and_build_knowledge(self) -> str:
+    def load_and_build_knowledge(self):
         with open(self.knowledge_base_path, 'r', encoding='utf-8') as f:
             knowledge_base = json.load(f)
         knowledge = ""
@@ -17,7 +17,7 @@ class KnowledgeBase:
             knowledge += f"Pregunta: \n{item['question']}\n"
             knowledge += f"Respuesta: \n{item['answer']}\n"
             knowledge += "-" * 50 + "\n"
-        return knowledge    
+        return knowledge
 
 class MongoService:    
     def __init__(self):

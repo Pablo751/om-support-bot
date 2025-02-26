@@ -21,7 +21,7 @@ class Message:
     
 class WhatsappMessage(Message):
     def __init__(self, body):
-        data = body['data']
+        data = body.get('data', {})
         super().__init__(
             api=WhatsAppAPI(),
             id=data.get('wa_id'),
@@ -31,11 +31,17 @@ class WhatsappMessage(Message):
 class ZohoMessage(Message):
     def __init__(self, body):
         data = body[0].get('payload', {})
-        subject = clean_text(data.get('subject'))
-        description = clean_text(data.get('description'))
-        client = clean_text(data.get('customFields').get('Organizaci\u00f3n'))
+        subject = clean_text(data.get('subject'), "")
+        description = clean_text(data.get('description'), "")
+        custom_fields = data.get('customFields')
+        client_name = clean_text(custom_fields.get('Organizaci\u00f3n', ""))
+        compiled_query = (
+            f"CLIENTE: {client_name}\n\n"
+            f"TITULO: {subject}\n\n"
+            f"DESCRIPCION:\n{description}"
+        )
         super().__init__(
             api=ZohoAPI(),
             id=data.get('id'),
-            query=f"CLIENTE: {client}\n\nTITULO: {subject}\n\nDESCRIPCION: \n{description}"
+            query=compiled_query
         )

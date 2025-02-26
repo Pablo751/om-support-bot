@@ -2,7 +2,6 @@ import logging
 from src.config import Config
 import requests
 
-
 logger = logging.getLogger(__name__)
 
 class ZohoAPI:
@@ -13,8 +12,14 @@ class ZohoAPI:
         self.token_url = Config.ZOHO_TOKEN_URL
         self.desk_domain = Config.ZOHO_DESK_DOMAIN
         self.org_id = Config.ZOHO_ORG_ID
+        self.access_token = self._fetch_access_token()
+        self.headers = {
+            "Authorization": f"Zoho-oauthtoken {self.access_token}",
+            "orgId": self.org_id,
+            "Content-Type": "application/json"
+        }
 
-    def get_access_token(self):
+    async def _fetch_access_token(self):
         token_data = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -29,17 +34,11 @@ class ZohoAPI:
         return access_token
     
     async def send_message(self, ticket_id, message):
+        logger.info(f"Sending message: {message}")
         comment_url = f"{self.desk_domain}/api/v1/tickets/{ticket_id}/comments"
-        access_token = self.get_access_token()
-        headers = {
-            "Authorization": f"Zoho-oauthtoken {access_token}",
-            "orgId": self.org_id,
-            "Content-Type": "application/json"
-        }
         comment_data = {
             "content": message,
             "isPublic": False
         }
-        comment_response = requests.post(comment_url, json=comment_data, headers=headers)
-        comment_json = comment_response.json()
-        return comment_json
+        response = requests.post(comment_url, json=comment_data, headers=self.headers)
+        return response.json()
