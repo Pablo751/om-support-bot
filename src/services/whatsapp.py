@@ -10,7 +10,7 @@ class WhatsAppAPI:
         self.api_key = Config.WASAPI_API_KEY
         self.base_url = Config.WASAPI_BASE_URL
     
-    async def send_message(self, wa_id, message):
+    def send_message(self, wa_id, message):
         payload = {"message": message, "wa_id": wa_id}
         url = f"{self.base_url}/whatsapp-messages"
         headers = {

@@ -18,7 +18,7 @@ async def process_incoming(message_class, request):
 
         message = message_class(body)
         support_bot = SupportBot()
-        message_response = await support_bot.process_query(message)
+        message_response = support_bot.process_query(message)
 
         return {
             "success": True,
