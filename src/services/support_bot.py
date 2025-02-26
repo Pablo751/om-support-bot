@@ -17,7 +17,7 @@ class SupportBot:
         logger.info(f"Sending request to OpenAI query: {self.message.query}")
         query_response = self.openai.analyze_query(
             self.system_instructions, 
-            self.knowledge_service.load_and_build_knowledge(self.message.type), 
+            self.knowledge_service.load_and_build_knowledge(),
             self.message.query
         )
         logger.info(f"Generated query response: {query_response}")
