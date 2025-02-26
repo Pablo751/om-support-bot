@@ -24,7 +24,8 @@ class OpenAIAPI:
         try:
             knowledge = summarize_knowledge(knowledge, query)
             messages = [
-                {"role": "system", "content": system_instructions.format(knowledge=knowledge)},
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": knowledge},
                 {"role": "user", "content": query}
             ]
             response = openai.chat.completions.create(

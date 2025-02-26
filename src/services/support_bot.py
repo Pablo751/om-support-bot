@@ -11,13 +11,14 @@ class SupportBot:
         self.mongo_service = MongoService()
         self.knowledge_service = KnowledgeBase()
         self.system_instructions = texts.SYSTEM_INSTRUCTIONS
+        self.knowledge_base = texts.KNOWLEDGE_BASE
 
     async def process_query(self, message):
         self.message = message
         logger.info(f"Sending request to OpenAI query: {self.message.query}")
         query_response = self.openai.analyze_query(
             self.system_instructions, 
-            self.knowledge_service.load_and_build_knowledge(),
+            self.knowledge_base.format(knowledge=self.knowledge_service.load_and_build_knowledge()),
             self.message.query
         )
         logger.info(f"Generated query response: {query_response}")
@@ -50,7 +51,7 @@ class SupportBot:
             self.message.query += act_response
             return await self.process_query(self.message)
         
-        send_response = await self.message.send_message(act_response)
+        send_response = await self.message.reply(act_response)
         logger.info(f"Send response: {send_response}")
 
         return act_response

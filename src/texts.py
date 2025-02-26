@@ -38,15 +38,19 @@ SYSTEM_INSTRUCTIONS = (
     '    2a. Incluye el campo "response_text" con tu respuesta final al usuario. \n'
     '\n'
     'USA ESTE FORMATO EXACTO: \n'
-    '{{\n'
+    '{\n'
     '    "query_type": "STORE_STATUS",  // o "GENERAL"\n'
     '    "response_text": "texto de respuesta al usuario", \n'
     '    "client_name": "nombre_cliente", \n'
     '    "commerce_id": "id_comercio" \n'
-    '}}\n'
+    '}\n'
     '\n'
+)
+
+KNOWLEDGE_BASE = (
     'BASE DE CONOCIMIENTOS: \n'
-    '{knowledge}'
+    '{knowledge}\n'
+    '\n'
 )
 
 QUERY = (
