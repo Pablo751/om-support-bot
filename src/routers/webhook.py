@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 webhook_router = APIRouter()
 
+support_bot = SupportBot()
+
 async def process_incoming(message_class, request):
     try:
         logger.info(f"=============== New {message_class.__name__} ===============")
@@ -17,7 +19,6 @@ async def process_incoming(message_class, request):
         logger.info(f"Raw body: {body}")
 
         message = message_class(body)
-        support_bot = SupportBot()
         message_response = support_bot.process_query(message)
 
         return {
@@ -35,7 +36,6 @@ async def process_incoming(message_class, request):
 @webhook_router.post("/webhook")
 async def webhook(request: Request):
     return await process_incoming(WhatsappMessage, request)
-
 
 @webhook_router.post("/zohoTicket")
 async def zoho_ticket(request: Request):

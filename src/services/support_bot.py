@@ -12,8 +12,12 @@ class SupportBot:
         self.knowledge_service = KnowledgeBase()
         self.system_instructions = texts.SYSTEM_INSTRUCTIONS
         self.knowledge_base = texts.KNOWLEDGE_BASE
+        self.processed_messages = []
 
     def process_query(self, message):
+        if message.id in self.processed_messages:
+            raise Exception("Message already processed")
+        self.processed_messages.append(message.id)
         self.message = message
         logger.info(f"Sending request to OpenAI query: {self.message.query}")
         query_response = self.openai.analyze_query(
@@ -49,11 +53,8 @@ class SupportBot:
         elif query_type == 'ESCALATE':
             if self.message.type == 'whatsapp':
                 ticket_title = f"Escalation request for {self.message.type} (Phone Number: {self.message.id})"
-                api_response = self.message.create_ticket(
-                    subject=ticket_title,
-                    description=self.message.query
-                )
-            logger.info(f"Ticket create response: {api_response}")
+                api_response = self.message.create_ticket(subject=ticket_title, description=self.message.query)
+                logger.info(f"Ticket create response: {api_response}")
             act_response = texts.ESCALATE_MSG
             
         if process_again:
