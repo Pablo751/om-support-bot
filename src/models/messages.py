@@ -32,7 +32,6 @@ class WhatsappMessage(Message):
         api = WhatsAppAPI()
         id = data.get('wam_id')
         userid = data.get('wa_id')
-        message = data.get('message')
         historical_messages = api.get_messages(userid).get('data')
         historical_messages.sort(key=lambda msg: datetime.strptime(msg.get('created_at'), "%Y-%m-%d %H:%M:%S"))
         query = ""
@@ -41,7 +40,6 @@ class WhatsappMessage(Message):
             today = datetime.today().date()
             if created_at >= today:
                 query += f"{historical_message.get('created_at')}: {'Cliente' if historical_message.get('type') == 'in' else 'Yom'}: \n{historical_message.get('message')}\n\n"
-        query += f"Cliente: \n{message}\n\n"
         super().__init__(api=api, id=id, userid=userid, query=query, type='whatsapp')
 
 class ZohoMessage(Message):
