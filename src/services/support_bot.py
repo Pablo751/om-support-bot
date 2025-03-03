@@ -52,7 +52,7 @@ class SupportBot:
                     act_response = texts.STORE_STATUS_INACTIVE_MSG.format(commerce_id=commerce_id, client_name=client_name)
         elif query_type == 'ESCALATE':
             if message.type == 'whatsapp':
-                ticket_title = f"Escalation request for {message.type} (Phone Number: {message.id})"
+                ticket_title = f"Escalation request for {message.type} (Phone Number: {message.userid})"
                 api_response = message.create_ticket(subject=ticket_title, description=message.query)
                 logger.info(f"Ticket create response: {api_response}")
             act_response = texts.ESCALATE_MSG
