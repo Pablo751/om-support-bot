@@ -29,3 +29,12 @@ class WhatsAppAPI:
         except requests.RequestException as e:
             logger.error(f"Network error while sending message to {wa_id}: {str(e)}")
             raise HTTPException(status_code=500, detail="Network error while sending message.")
+
+    def get_messages(self, wa_id):
+        url = f"{self.base_url}/whatsapp-messages/{wa_id}"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers)
+        return response.json()
