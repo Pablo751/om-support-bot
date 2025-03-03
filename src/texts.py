@@ -62,3 +62,7 @@ ESCALATE_MSG = (
     "Lo siento, no tengo suficiente informacion para responder esta pregunta. \n"
     "He escalado tu consulta a nuestro equipo de desarrolladores y te contactaremos pronto.\n"
 )
+
+REPEAT_MSG = (
+    "Message already processed. Ignored."
+)
