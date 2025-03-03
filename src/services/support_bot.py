@@ -16,6 +16,7 @@ class SupportBot:
 
     def process_query(self, message):
         if message.id in self.processed_messages:
+            logger.info(texts.REPEAT_MSG)
             return texts.REPEAT_MSG
         self.processed_messages.append(message.id)
         logger.info(f"Sending request to OpenAI query: {message.query}")
