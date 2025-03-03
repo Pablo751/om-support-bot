@@ -17,7 +17,7 @@ class Message:
     def reply(self, response_text):
         try:
             logger.info(f"Sending message: {response_text}")
-            return self.api.send_message(self.id, response_text)
+            return self.api.send_message(self.userid, response_text)
         except Exception as e:
             logger.error(f"Error sending message: {e}")
             return None
@@ -33,7 +33,7 @@ class WhatsappMessage(Message):
         id = data.get('wam_id')
         userid = data.get('wa_id')
         message = data.get('message')
-        historical_messages = api.get_messages(id).get('data')
+        historical_messages = api.get_messages(userid).get('data')
         historical_messages.sort(key=lambda msg: datetime.strptime(msg.get('created_at'), "%Y-%m-%d %H:%M:%S"))
         query = ""
         for historical_message in historical_messages:
@@ -58,8 +58,8 @@ class ZohoMessage(Message):
         )
         super().__init__(
             api=ZohoAPI(),
-            id=data.get('id'),
-            userid=None,
+            id=None,
+            userid=data.get('id'),
             query=compiled_query,
             type='zoho'
         )
