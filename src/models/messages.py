@@ -7,13 +7,13 @@ from src.tools import clean_text
 logger = logging.getLogger(__name__)
 
 class Message:
-    def __init__(self, api, id, userid, query, type):
+    def __init__(self, api, id, userid, query, type, manual_mode=False):
         self.api = api
         self.id = id
         self.userid = userid
         self.query = query
         self.type = type
-        self.manual_mode = False
+        self.manual_mode = manual_mode
 
     def reply(self, response_text):
         try:
@@ -55,7 +55,7 @@ class WhatsappMessage(Message):
             if created_at >= today:
                 query += f"{'Cliente' if historical_message.get('type') == 'in' else 'Yom'}: \n{historical_message.get('message')}\n\n"
         
-        manual_mode = super().is_manual_mode(historical_messages)
+        manual_mode = self.is_manual_mode(historical_messages)
         
         super().__init__(api=api, id=id, userid=userid, query=query, type='whatsapp', manual_mode=manual_mode)
 
