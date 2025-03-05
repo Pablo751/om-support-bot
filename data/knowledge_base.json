@@ -1,123 +1,112 @@
 {
-    "faq": [
-        {
-            "question": "No puedo acceder a mi cuenta / No tengo cuenta de administrador",
-            "answer": "¡No te preocupes! Para obtener acceso como administrador, puedes contactar directamente a tu supervisor o al equipo de soporte. Ellos te ayudarán a configurar tu cuenta con los permisos necesarios.",
-            "category": "Accesos y Autenticación",
-            "support_level": "L1"
-        },
-        {
-            "question": "Olvidé mi contraseña (vendedor)",
-            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas: \n1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo. \n2. Si esto no funciona, contáctanos y te enviaremos un correo para restablecer tu contraseña.",
-            "category": "Accesos y Autenticación",
-            "support_level": "L1"
-        },
-        {
-            "question": "Necesito activar un nuevo comercio",
-            "answer": "¡Bienvenido! Para activar tu comercio solo necesitamos: \n1. El nombre de tu negocio \n2. Tu correo electrónico \nNosotros nos encargaremos de crear tu cuenta y te enviaremos las instrucciones de acceso por correo. ¡En poco tiempo estarás operando!",
-            "category": "Configuración de Comercios",
-            "support_level": "L1"
-        },
-        {
-            "question": "No puedo ver mis productos/precios en la APP",
-            "answer":  "Verificaremos tu catálogo ahora mismo. Por favor, indícanos: \n1. ¿Desde cuándo observas este problema? \n2. ¿Tienes algún producto específico que no puedas ver? \nNuestro equipo revisará tu configuración y te responderá en breve.",
-            "category": "Validación y Troubleshooting",
-            "support_level": "L1"
-        },
-        {
-            "question": "Problemas con el acceso al B2B",
-            "answer": "Revisaremos tu acceso inmediatamente. Para ayudarte mejor, por favor confírmanos: \n1. El ID o nombre de tu comercio \n2. El correo con el que intentas acceder \nNos aseguraremos de que puedas ingresar correctamente a la plataforma.",
-            "category": "Accesos y Autenticación",
-            "support_level": "L1"
-        },
-        {
-            "question": "Necesito cambiar el correo asociado a mi cuenta",
-            "answer": "¡Te ayudamos con el cambio! Solo necesitamos: \n1. Tu ID de comercio o vendedor \n2. El nuevo correo que quieres utilizar \nUna vez realizado el cambio, recibirás una confirmación en ambos correos (actual y nuevo).",
-            "category": "Gestión de Usuarios",
-            "support_level": "L1"
-        },
-        {
-            "question": "No encuentro mi código de vendedor",
-            "answer": "¡Te ayudamos a encontrarlo! Necesitaremos: \n1. Tu nombre completo \n2. El correo asociado a tu cuenta \nVerificaremos tu información y te proporcionaremos tu código de inmediato.",
-            "category": "Gestión de Usuarios",
-            "support_level": "L1"
-        },
-        {
-            "question": "La APP no funciona correctamente",
-            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos: \n1. ¿Qué problema específico estás experimentando? \n2. ¿En qué momento ocurre? \nMientras tanto, puedes intentar: \n- Cerrar y volver a abrir la APP \n- Verificar tu conexión a internet",
-            "category": "Validación y Troubleshooting",
-            "support_level": "L1"
-        },
-        {
-            "question": "Asignación de clientes a comercios/ o validación de clientes, Cambios de correos",
-            "answer": "Para realizar este requerimiento debes hacer lo siguiente: \nIngresar al Youorder.me | Admin, con cuenta de Administrador. \n1. Acceder al apartado **“Usuarios”**. \n2. Seleccionar **“Comercios”**. \n3. Utilizar el buscador para ingresar el nombre o el ID del comercio. \n4. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente. \n5. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },{
-            "question": "Que pasa si no tengo cuenta de administrador?",
-            "answer": "Si necesitas activar una cuenta como administrador, debes pedirselo a un administrador de tu empresa o bien contactar al CSS a cargo",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "Como crear cuenta de administrador",
-            "answer": "Primero debes entrar al Administrador de Yom: https://admin.youorder.me/ \nIr a la sección Configuraciones, \nLuego en usuarios dirigirse a administradores \nSeleccionar el botón invitar administrador \nDeberás rellenar los campos que se solicitan \nEnviar invitación al correo electrónico que se anotó en los campos. \nUna vez que la persona acepte, en la seccion \"invitaciones\" dirigete a solicitudes recibidas, debes aprobar el usuario",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "¿Cómo le envió invitación para recuperar contraseña a un vendedor?",
-            "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos:\n\nPrimero intenta pidiendole al vendedor que use este enlace: https://admin.youorder.me/recover-password\nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.\n\nSi nada de esto funciona, avísanos para tomar tu caso.",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "Activaciones de cuenta de Comercio",
-            "answer": "Si quieres activarle la cuenta a un comercio debes: \n1. Ingresar al Admin de Yom con una cuenta de administrador \n2. Ir a la sección \"Usuarios\" hacer click en \"Comercios\" y hacer click en \"invitar comercio\" \n3. En esta sección debes agregar el nombre del comercio y el correo que te indicó ese cliente y hacer click en \"enviar\". \n4. Una vez que el comercio se haya registrado, debes ir a la sección \"invitaciones\" y hacer click en \"solicitudes recibidas\", acá encontraras el comercio que debes autorizar. \n4. Una vez que el Comercio haya sido creado, debes seguir los pasos de asignacion de clientes a comercios. \n5. Acceder al apartado **“Usuarios”**. \n6. Seleccionar **“Comercios”**. \n7. Utilizar el buscador para ingresar el nombre o el ID del comercio. \n8. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente. \n9. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).* \n  \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "Deseo cambiar un correo de vendedor a un código de vendedor",
-            "answer": "1. Ingresar al Admin de Yom con una cuenta de administrador \n2. Ir a la sección \"Usuarios\", hacer click en \"Vendedores\" y hacer click en \"invitar vendedor\" \n3. En esta sección debes agregar el nombre del vendedor, el correo que quieres asociar a este vendedor y buscar el código de este vendedor en la sección \"seleccionar código del vendedor\"  \nSi no encuentras un código para el vendedor , puedes hacer click en \"crear codigo vendedor\" que se encuentra justo abajo del item \"seleccionar código del vendedor\"  \n \nSi el problema persiste, esto puede deberse a un problema de la empresa para la cual trabajas, para eso debes contactarte con tu supervisor a cargo para solucionar el problema.  \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "Validaciones en App",
-            "answer": "**Verificar un producto, comercio o cualquier inconveniente reportado en YOM Ventas (App Móvil)** \n \n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador. \n2. Acceder al apartado Gestión de vendedores → Vendedores  \n3. Buscar tu cuenta de vendedor (Si no cuentas con una, debes crearla en el mismo Admin.) \n4. Accede a tu cuenta de vendedor en el Administrador y selecciona **“Modificar”**. Aquí debes asignarte el vendedor que reporta el inconveniente, lo que se conoce como **“Cuenta Espejo”**, ya que tomarás el ID del vendedor para replicar su cuenta en la app. \n5. Una vez asignado el vendedor a tu correo de vendedor, ingresa a la app en un dispositivo Android. \n6. Inicia sesión con tu cuenta de vendedor. \n7. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del vendedor, por lo que no debes eliminar productos del carrito ni procesar órdenes.)* \n \nEscenarios posibles después de la verificación:  \nA) Si todo funciona correctamente: \n \nAvisanos para cerrar el caso. \n \nSi no: \n \nPuedes indicarnos el ID del producto/comercio o vendedor (estos números los puedes encontrar en tu perfil de usuario en la app o en los correos que te llegan cuando un comercio compra) \n \n¿En qué momento exacto ocurre el problema? \n¿Puedes compartir capturas de pantalla del error? \n¿El problema es consistente o intermitente? \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
-            "category": "Validación y Troubleshooting",
-            "support_level": "L2"
-        },
-        {
-            "question": "Validaciones en B2B",
-            "answer": "1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador. \n2. Acceder al apartado Usuarios → Comercios \n3. Busca el comercio en cuestión  \n4. Baja hasta apartado “Información de los usuarios” \n5. Aquí debes añadir al listado(puede estar vacío) tu cuenta de B2B o la de Felipe: \nUsuario: [Felipe.munoz+b2bsoprole@youorder.me](mailto:Felipe.munoz+b2bsoprole@youorder.me) (generalmente se ocupa esta cuenta) \n6. Una vez asignado en el Admin. debes acceder al B2B del cliente e ingresar con la cuenta de Felipe. \n7. Dentro del B2B debes buscar el ID del comercio en cuestión y ahí tendrás acceso al B2B del cliente \n8. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del comercio, por lo que no debes eliminar productos del carrito ni procesar órdenes.)* \n \nEscenarios después de la verificación: \nA) Si todo funciona correctamente: \n \nAvisanos para cerrar el caso! \n \nB) Si se detecta un problema: \n \nProblemas de acceso: \n \nVerificar permisos del usuario \nConfirmar que el comercio está activo \nValidar la configuración de la empresa asociada \n \n \nProblemas de catálogo: \n \nVerificar la lista de precios asignada \nRevisa el archivo que cargan para la integración \nValidar reglas de negocio aplicadas \nConfirmar disponibilidad de productos \n \n \nProblemas de órdenes: \n \nRevisar el historial de pedidos \nVerificar estado de crédito \nValidar restricciones de compra \n \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
-            "category": "Validación y Troubleshooting",
-            "support_level": "L2"
-        },
-        {
-            "question": "¿Cómo asignar un código ya creado a un nuevo vendedor?",
-            "answer": "Entrar al Administrador de Yom: https://admin.youorder.me/ \nSeleccionar configuración, y en la seccion \"usuarios\" hacer click en \"vendedores\" \nSeleccionar en el vendedor al que se le quiere modificar el código y estando en el perfil del vendedor apretar el botón que dice \"modificar\" para cambiar el código.",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "No puedo acceder a mi cuenta / No tengo cuenta de administrador",
-            "answer": "¡No te preocupes! Para obtener acceso como administrador, puedes contactar directamente a tu supervisor. Este puede escalarlo al administrador y te ayudarán a configurar tu cuenta con los permisos necesarios.",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "Olvidé mi contraseña (vendedor)",
-            "answer": "Te ayudamos a recuperar tu acceso. Tienes dos opciones sencillas: \n 1. Desde la APP, selecciona 'Olvidé mi contraseña' y sigue los pasos en tu correo. \n 2. Si esto no funciona, avísanos y te enviaremos un correo para restablecer tu contraseña. \n \nSi el problema persiste: \n \nEscalaremos tu ticket al equipo de tecnología y te responderemos a más tardar al día siguiente hábil. ",
-            "category": "Gestión de Usuarios",
-            "support_level": "L2"
-        },
-        {
-            "question": "La APP no funciona correctamente",
-            "answer": "Lamentamos los inconvenientes. Para ayudarte rápidamente, por favor cuéntanos: \n 1. ¿Qué problema específico estás experimentando? \n 2. ¿En qué momento ocurre? \n Mientras tanto, puedes intentar: \n - Cerrar y volver a abrir la APP \n - Verificar tu conexión a internet",
-            "category": "Validación y Troubleshooting",
-            "support_level": "L2"
-        }
-    ]
+  "faq": [
+    {
+      "question": "Asignación de clientes a comercios/ o validación de clientes\n\nCambios de correos\n\n",
+      "answer": "\nPara realizar este requerimiento, primero debes tener una cuenta de Administrador y hacer lo siguiente:\nIngresar https://admin.youorder.me/ , con cuenta de Administrador.\n1. Acceder al apartado **“Usuarios”**.\n2. Seleccionar **“Comercios”**.\n3. Utilizar el buscador para ingresar el nombre o el ID del comercio.\n4. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente.\n5. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*\n",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "Que pasa si no tengo cuenta de administrador?",
+      "answer": "Si necesitas activar una cuenta como administrador, debes pedirselo a un administrador de tu empresa o bien contactar al CSS a cargo",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "Como crear cuenta de administrador",
+      "answer": "Primero debes entrar al Administrador de Yom: https://admin.youorder.me/\n1. Ir a la sección Configuraciones,\n2. Luego en usuarios dirigirse a administradores\n3. Seleccionar el botón invitar administrador\n4. Deberás rellenar los campos que se solicitan\n5. Enviar invitación al correo electrónico que se anotó en los campos.\n6. Una vez que la persona acepte, en la seccion \"invitaciones\" dirigete a solicitudes recibidas, debes aprobar el usuario",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "¿Cómo le envió invitación para recuperar contraseña a un vendedor?\n",
+      "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos:\n\nPrimero intenta pidiendole al vendedor que use este enlace: https://admin.youorder.me/recover-password\nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.\n\nSi nada de esto funciona, avísanos para tomar tu caso.",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "Activaciones de cuenta de Comercio",
+      "answer": "Si quieres activarle la cuenta a un comercio debes: \n1. Ingresar al Admin de Yom con una cuenta de administrador\n2. Ir a la sección \"Usuarios\" hacer click en \"Comercios\" y hacer click en \"invitar comercio\"\n3. En esta sección debes agregar el nombre del comercio y el correo que te indicó ese cliente y hacer click en \"enviar\".\n4. Una vez que el comercio se haya registrado, debes ir a la sección \"invitaciones\" y hacer click en \"solicitudes recibidas\", acá encontraras el comercio que debes autorizar.\n4. Una vez que el Comercio haya sido creado, debes seguir los pasos de asignacion de clientes a comercios.\n5. Acceder al apartado **“Usuarios”**.\n6. Seleccionar **“Comercios”**.\n7. Utilizar el buscador para ingresar el nombre o el ID del comercio.\n8. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente.\n9. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*\n ",
+      "category": "Validación y Troubleshooting",
+      "type": "admin"
+    },
+    {
+      "question": "Deseo cambiar un correo de vendedor a otro codigo",
+      "answer": "1. Ingresar al Admin de Yom con una cuenta de administrador\n2. Ir a la sección \"Usuarios\", hacer click en \"Vendedores\" y hacer click en \"invitar vendedor\"\n3. En esta sección debes agregar el nombre del vendedor y el correo que quieres asociarle y buscar el código en la sección \"seleccionar código del vendedor\" \nSi no encuentras un código para el vendedor , puedes hacer click en \"crear codigo vendedor\" que se encuentra justo abajo del item \"seleccionar código del vendedor\".\n\nSi no te permite utilizar el código de vendedor, puede deberse a que no ha sido ingresado ese código desde tu empresa. Contacta a tu administrador para que te pueda dar más información. Si el problema persiste, avísanos para escalar el caso.  \n\n",
+      "category": "Validación y Troubleshooting",
+      "type": "admin"
+    },
+    {
+      "question": "Validaciones en App",
+      "answer": "**Verificar un producto, comercio o cualquier inconveniente reportado en YOM Ventas (App Móvil)**\n\n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador.\n2. Acceder al apartado Gestión de vendedores → Vendedores \n3. Buscar tu cuenta de vendedor (Si no cuentas con una, debes crearla en el mismo Admin.)\n4. Accede a tu cuenta de vendedor en el Administrador y selecciona **“Modificar”**. Aquí debes asignarte el vendedor que reporta el inconveniente, lo que se conoce como **“Cuenta Espejo”**, ya que tomarás el ID del vendedor para replicar su cuenta en la app.\n5. Una vez asignado este vendedor a tu correo, ingresa a la app en un dispositivo Android.\n6. Inicia sesión con tu cuenta de vendedor.\n7. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del vendedor, por lo que no debes eliminar productos del carrito ni procesar órdenes.)*\n\nEscenarios posibles después de la verificación: \nA) Si todo funciona correctamente:\nPreguntale al vendedor si sincronizo datos , si si tiene una buena conexión wifi o sugiere borrar caché si es que no tiene ningún producto en canasta\n\nSolicita al usuario que confirme si el problema persiste\n\nSi el problema persiste, pide detalles específicos:\n\n¿En qué momento exacto ocurre el problema?\n¿Puedes compartir capturas de pantalla del error?\n¿El problema es consistente o intermitente?\n\nY sube el ticket en Soporte Yom con ID del vendedor, ID del comercio que está mirando y todo el detalle que ya le pediste. \n\n\n\nB) Si se detecta el problema reportado:\n\nDocumenta el error con capturas de pantalla y sube el ticket en Soporte Yom con ID del vendedor, ID del comercio que está mirando y todo el detalle que ya le pediste. \n",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "Validaciones en B2B",
+      "answer": "Para hacer cualquier tipo de validación en el B2B te recomendamos hacer lo siguiente: \n\n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador.\n2. Acceder al apartado Usuarios → Comercios\n3. Busca el comercio en cuestión \n4. Baja hasta apartado “Información de los usuarios”\n5. Aquí debes añadir al listado(puede estar vacío) tu cuenta de B2B\n6. Una vez asignado en el Admin. debes acceder al B2B del cliente con tu cuenta.\n7. Dentro del B2B debes buscar el ID del comercio en cuestión y ahí tendrás acceso al B2B del cliente\n8. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del comercio, por lo que no debes eliminar productos del carrito ni procesar órdenes.):\n\nVerificar permisos del usuario\nConfirmar que el comercio está activo\nValidar la configuración de la empresa asociada\n\nVerificar la lista de precios asignada\nValidar reglas de negocio aplicadas\nConfirmar disponibilidad de productos\n\nRevisar el historial de pedidos\nVerificar estado de crédito\nValidar restricciones de compra\n\nEscenarios después de la verificación:\nA) Si el problema persiste:\n\n1. Sugerir al comercio:\n1. Sólo si no hay productos en el carro, limpiar caché del navegador\n2. Cerrar sesión y volver a ingresar\n3. Verificar que está utilizando un navegador compatible\n\nSi aún así persiste:\n\nPide al comercio lo siguiente: \n- ¿En qué momento específico ocurre el inconveniente?\n- ¿Puede compartir una captura de pantalla del error?\n\nSubir un ticket  a Soporte Yom con esta información y con el ID del comercio \n",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "¿Cómo asignar un código ya creado a un nuevo vendedor?",
+      "answer": "Hola! Para asignar un código ya creado a un nuevo vendedor, sigue los siguientes pasos: \n\nEntrar al Administrador de Yom: https://admin.youorder.me/\nSeleccionar configuración, y en la seccion \"usuarios\" hacer click en \"vendedores\"\nSeleccionar en el vendedor al que se le quiere modificar el código y estando en el perfil del vendedor apretar el botón que dice \"modificar\" para cambiar el código.",
+      "category": "Gestión de Usuarios",
+      "type": "admin"
+    },
+    {
+      "question": "Asignación de clientes a comercios/ o validación de clientes\n\nCambios de correos\n\n",
+      "answer": "\nPara realizar este requerimiento, primero debes tener una cuenta de Administrador y hacer lo siguiente:\nIngresar https://admin.youorder.me/ , con cuenta de Administrador.\n1. Acceder al apartado **“Usuarios”**.\n2. Seleccionar **“Comercios”**.\n3. Utilizar el buscador para ingresar el nombre o el ID del comercio.\n4. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente.\n5. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*\n",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "Que pasa si no tengo cuenta de administrador?",
+      "answer": "Si necesitas activar una cuenta como administrador, debes pedirselo a un administrador de tu empresa o bien contactar al CSS a cargo",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "Como crear cuenta de administrador",
+      "answer": "Primero debes entrar al Administrador de Yom: https://admin.youorder.me/\n1. Ir a la sección Configuraciones,\n2. Luego en usuarios dirigirse a administradores\n3. Seleccionar el botón invitar administrador\n4. Deberás rellenar los campos que se solicitan\n5. Enviar invitación al correo electrónico que se anotó en los campos.\n6. Una vez que la persona acepte, en la seccion \"invitaciones\" dirigete a solicitudes recibidas, debes aprobar el usuario",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "¿Cómo le envió invitación para recuperar contraseña a un vendedor?\n",
+      "answer": "Para enviar una invitación para recuperar la contraseña a un vendedor siga los siguientes pasos:\n\nPrimero intenta pidiendole al vendedor que use este enlace: https://admin.youorder.me/recover-password\nOtra forma es que el vendedor al ingresar en la APP seleccione la opción “olvidé mi contraseña” para que el sistema lo redirija a su correo electrónico y pueda ingresar una nueva contraseña.\n\nSi nada de esto funciona, avísanos para tomar tu caso.",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "Activaciones de cuenta de Comercio",
+      "answer": "Si quieres activarle la cuenta a un comercio debes: \n1. Ingresar al Admin de Yom con una cuenta de administrador\n2. Ir a la sección \"Usuarios\" hacer click en \"Comercios\" y hacer click en \"invitar comercio\"\n3. En esta sección debes agregar el nombre del comercio y el correo que te indicó ese cliente y hacer click en \"enviar\".\n4. Una vez que el comercio se haya registrado, debes ir a la sección \"invitaciones\" y hacer click en \"solicitudes recibidas\", acá encontraras el comercio que debes autorizar.\n4. Una vez que el Comercio haya sido creado, debes seguir los pasos de asignacion de clientes a comercios.\n5. Acceder al apartado **“Usuarios”**.\n6. Seleccionar **“Comercios”**.\n7. Utilizar el buscador para ingresar el nombre o el ID del comercio.\n8. Ingresar al comercio correspondiente y desplazarse hasta el apartado **“Información de los usuarios”** para verificar si el correo coincide o asignar el correo del cliente.\n9. Verificar que el correo del cliente solicitado esté presente. Si no es así, consultar al cliente sobre el correo asociado al comercio. *(Este correo debe estar registrado en el apartado “Clientes” del Administrador, si no lo está se debe enviar una invitación).*\n ",
+      "category": "Validación y Troubleshooting",
+      "type": "seller"
+    },
+    {
+      "question": "Deseo cambiar un correo de vendedor a otro codigo",
+      "answer": "1. Ingresar al Admin de Yom con una cuenta de administrador\n2. Ir a la sección \"Usuarios\", hacer click en \"Vendedores\" y hacer click en \"invitar vendedor\"\n3. En esta sección debes agregar el nombre del vendedor y el correo que quieres asociarle y buscar el código en la sección \"seleccionar código del vendedor\" \nSi no encuentras un código para el vendedor , puedes hacer click en \"crear codigo vendedor\" que se encuentra justo abajo del item \"seleccionar código del vendedor\".\n\nSi no te permite utilizar el código de vendedor, puede deberse a que no ha sido ingresado ese código desde tu empresa. Contacta a tu administrador para que te pueda dar más información. Si el problema persiste, avísanos para escalar el caso.  \n\n",
+      "category": "Validación y Troubleshooting",
+      "type": "seller"
+    },
+    {
+      "question": "Validaciones en App",
+      "answer": "**Verificar un producto, comercio o cualquier inconveniente reportado en YOM Ventas (App Móvil)**\n\n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador.\n2. Acceder al apartado Gestión de vendedores → Vendedores \n3. Buscar tu cuenta de vendedor (Si no cuentas con una, debes crearla en el mismo Admin.)\n4. Accede a tu cuenta de vendedor en el Administrador y selecciona **“Modificar”**. Aquí debes asignarte el vendedor que reporta el inconveniente, lo que se conoce como **“Cuenta Espejo”**, ya que tomarás el ID del vendedor para replicar su cuenta en la app.\n5. Una vez asignado este vendedor a tu correo, ingresa a la app en un dispositivo Android.\n6. Inicia sesión con tu cuenta de vendedor.\n7. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del vendedor, por lo que no debes eliminar productos del carrito ni procesar órdenes.)*\n\nEscenarios posibles después de la verificación: \nA) Si todo funciona correctamente:\nPreguntale al vendedor si sincronizo datos , si si tiene una buena conexión wifi o sugiere borrar caché si es que no tiene ningún producto en canasta\n\nSolicita al usuario que confirme si el problema persiste\n\nSi el problema persiste, pide detalles específicos:\n\n¿En qué momento exacto ocurre el problema?\n¿Puedes compartir capturas de pantalla del error?\n¿El problema es consistente o intermitente?\n\nY sube el ticket en Soporte Yom con ID del vendedor, ID del comercio que está mirando y todo el detalle que ya le pediste. \n\n\n\nB) Si se detecta el problema reportado:\n\nDocumenta el error con capturas de pantalla y sube el ticket en Soporte Yom con ID del vendedor, ID del comercio que está mirando y todo el detalle que ya le pediste. \n",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "Validaciones en B2B",
+      "answer": "Para hacer cualquier tipo de validación en el B2B te recomendamos hacer lo siguiente: \n\n1. Ingresar al https://admin.youorder.me/auth/login, con cuenta de Administrador.\n2. Acceder al apartado Usuarios → Comercios\n3. Busca el comercio en cuestión \n4. Baja hasta apartado “Información de los usuarios”\n5. Aquí debes añadir al listado(puede estar vacío) tu cuenta de B2B\n6. Una vez asignado en el Admin. debes acceder al B2B del cliente con tu cuenta.\n7. Dentro del B2B debes buscar el ID del comercio en cuestión y ahí tendrás acceso al B2B del cliente\n8. Valida el inconveniente reportado. *(¡Atención! Estás dentro de la cuenta del comercio, por lo que no debes eliminar productos del carrito ni procesar órdenes.):\n\nVerificar permisos del usuario\nConfirmar que el comercio está activo\nValidar la configuración de la empresa asociada\n\nVerificar la lista de precios asignada\nValidar reglas de negocio aplicadas\nConfirmar disponibilidad de productos\n\nRevisar el historial de pedidos\nVerificar estado de crédito\nValidar restricciones de compra\n\nEscenarios después de la verificación:\nA) Si el problema persiste:\n\n1. Sugerir al comercio:\n1. Sólo si no hay productos en el carro, limpiar caché del navegador\n2. Cerrar sesión y volver a ingresar\n3. Verificar que está utilizando un navegador compatible\n\nSi aún así persiste:\n\nPide al comercio lo siguiente: \n- ¿En qué momento específico ocurre el inconveniente?\n- ¿Puede compartir una captura de pantalla del error?\n\nSubir un ticket  a Soporte Yom con esta información y con el ID del comercio \n",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    },
+    {
+      "question": "¿Cómo asignar un código ya creado a un nuevo vendedor?",
+      "answer": "Hola! Para asignar un código ya creado a un nuevo vendedor, sigue los siguientes pasos: \n\nEntrar al Administrador de Yom: https://admin.youorder.me/\nSeleccionar configuración, y en la seccion \"usuarios\" hacer click en \"vendedores\"\nSeleccionar en el vendedor al que se le quiere modificar el código y estando en el perfil del vendedor apretar el botón que dice \"modificar\" para cambiar el código.",
+      "category": "Gestión de Usuarios",
+      "type": "seller"
+    }
+  ]
 }
