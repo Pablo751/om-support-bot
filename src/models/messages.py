@@ -37,7 +37,7 @@ class Message:
         ):
             return True
         # once manual mode is activated, it should not be deactivated again
-        return self.manual_mode
+        return getattr(self, 'manual_mode', False)
     
 class WhatsappMessage(Message):
     def __init__(self, body):
