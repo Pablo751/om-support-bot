@@ -9,14 +9,15 @@ class KnowledgeBase:
     def __init__(self):
         self.knowledge_base_path = Config.KNOWLEDGE_BASE_PATH
 
-    def load_and_build_knowledge(self):
+    def load_and_build_knowledge(self, type):
         with open(self.knowledge_base_path, 'r', encoding='utf-8') as f:
             knowledge_base = json.load(f)
         knowledge = ""
         for item in knowledge_base.get("faq", []):
-            knowledge += f"Pregunta: \n{item['question']}\n"
-            knowledge += f"Respuesta: \n{item['answer']}\n"
-            knowledge += "-" * 50 + "\n"
+            if item.get("type") == type:
+                knowledge += f"Pregunta: \n{item['question']}\n"
+                knowledge += f"Respuesta: \n{item['answer']}\n"
+                knowledge += "-" * 50 + "\n"
         return knowledge
 
 class MongoService:    

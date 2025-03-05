@@ -39,7 +39,7 @@ class WhatsappMessage(Message):
             created_at = datetime.strptime(historical_message.get('created_at'), "%Y-%m-%d %H:%M:%S").date()
             today = datetime.today().date()
             if created_at >= today:
-                query += f"{historical_message.get('created_at')}: {'Cliente' if historical_message.get('type') == 'in' else 'Yom'}: \n{historical_message.get('message')}\n\n"
+                query += f"{'Cliente' if historical_message.get('type') == 'in' else 'Yom'}: \n{historical_message.get('message')}\n\n"
         super().__init__(api=api, id=id, userid=userid, query=query, type='whatsapp')
 
 class ZohoMessage(Message):
