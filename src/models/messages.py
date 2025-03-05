@@ -26,18 +26,17 @@ class Message:
     def create_ticket(self, subject, description):
         api_zoho = ZohoAPI()
         return api_zoho.create_ticket(subject, description)
-    
+        
     def is_manual_mode(self, historical_messages):
-        # if the two messages before the last one are from us, it means someone started interacting with the user manually, therefore the bot shouldn't reply
-        if (
-            len(historical_messages) >= 3 and
-            historical_messages[-1].get('type') == 'in' and
-            historical_messages[-2].get('type') == 'out' and
-            historical_messages[-3].get('type') == 'out'
-        ):
-            return True
-        # once manual mode is activated, it should not be deactivated again
-        return getattr(self, 'manual_mode', False)
+        # if the two messages before a customer message are from us, it means someone started interacting with the customer manually, therefore the bot shouldn't reply
+        for i in range(len(historical_messages) - 2):
+            if (
+                historical_messages[i].get('type') == 'out' and
+                historical_messages[i + 1].get('type') == 'out' and
+                historical_messages[i + 2].get('type') == 'in'
+            ):
+                return True
+        return False
     
 class WhatsappMessage(Message):
     def __init__(self, body):
