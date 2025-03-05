@@ -66,3 +66,7 @@ ESCALATE_MSG = (
 REPEAT_MSG = (
     "Message already processed. Ignored."
 )
+
+MANUAL_MODE_MSG = (
+    "Manual mode activated. Ignored."
+)

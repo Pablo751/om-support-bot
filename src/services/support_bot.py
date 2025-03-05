@@ -15,6 +15,9 @@ class SupportBot:
         self.processed_messages = []
 
     def process_query(self, message):
+        if message.manual_mode:
+            logger.info(texts.MANUAL_MODE_MSG)
+            return texts.MANUAL_MODE_MSG
         if message.id is not None and message.id in self.processed_messages:
             logger.info(texts.REPEAT_MSG)
             return texts.REPEAT_MSG
