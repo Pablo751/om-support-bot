@@ -13,6 +13,7 @@ class Message:
         self.userid = userid
         self.query = query
         self.type = type
+        self.manual_mode = False
 
     def reply(self, response_text):
         try:
@@ -55,7 +56,8 @@ class WhatsappMessage(Message):
             historical_messages[-3].get('type') == 'out'
         ):
             return True
-        return False
+        # once manual mode is activated, it should not be deactivated again
+        return self.manual_mode
 
 class ZohoMessage(Message):
     def __init__(self, body):
