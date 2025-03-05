@@ -27,6 +27,18 @@ class Message:
         api_zoho = ZohoAPI()
         return api_zoho.create_ticket(subject, description)
     
+    def is_manual_mode(self, historical_messages):
+        # if the two messages before the last one are from us, it means someone started interacting with the user manually, therefore the bot shouldn't reply
+        if (
+            len(historical_messages) >= 3 and
+            historical_messages[-1].get('type') == 'in' and
+            historical_messages[-2].get('type') == 'out' and
+            historical_messages[-3].get('type') == 'out'
+        ):
+            return True
+        # once manual mode is activated, it should not be deactivated again
+        return self.manual_mode
+    
 class WhatsappMessage(Message):
     def __init__(self, body):
         data = body.get('data', {})
@@ -43,21 +55,9 @@ class WhatsappMessage(Message):
             if created_at >= today:
                 query += f"{'Cliente' if historical_message.get('type') == 'in' else 'Yom'}: \n{historical_message.get('message')}\n\n"
         
-        self.manual_mode = self.is_manual_mode(historical_messages)
+        manual_mode = super().is_manual_mode(historical_messages)
         
-        super().__init__(api=api, id=id, userid=userid, query=query, type='whatsapp')
-    
-    def is_manual_mode(self, historical_messages):
-        # if the two messages before the last one are from us, it means someone started interacting with the user manually, therefore the bot shouldn't reply
-        if (
-            len(historical_messages) >= 3 and
-            historical_messages[-1].get('type') == 'in' and
-            historical_messages[-2].get('type') == 'out' and
-            historical_messages[-3].get('type') == 'out'
-        ):
-            return True
-        # once manual mode is activated, it should not be deactivated again
-        return self.manual_mode
+        super().__init__(api=api, id=id, userid=userid, query=query, type='whatsapp', manual_mode=manual_mode)
 
 class ZohoMessage(Message):
     def __init__(self, body):
